@@ -1,38 +1,554 @@
-.App {
+/* src/App.css */
+
+/* Import Google Fonts - Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* Base styles for the entire application */
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  color: #333; /* Default text color */
+}
+
+.app-container {
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #fff8e1, #f3e5f5); /* Light yellow to light purple gradient */
+}
+
+/* Header Styles */
+.header {
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom-left-radius: 1rem; /* Rounded bottom corners */
+  border-bottom-right-radius: 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* Space between icon and text */
+}
+
+.header-home-icon {
+  width: 2rem;
+  height: 2rem;
+  color: #ff9800; /* Orange color */
+  background-color: #fff3e0; /* Light orange background */
+  padding: 0.25rem;
+  border-radius: 9999px; /* Full circle */
+}
+
+.header-title {
+  font-size: 1.25rem; /* Equivalent to text-xl */
+  font-weight: 700; /* Equivalent to font-bold */
+  color: #333;
+}
+
+.header-subtitle {
+  font-size: 0.875rem; /* Equivalent to text-sm */
+  color: #757575; /* Gray color */
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* Space between buttons */
+}
+
+.header-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* Space between icon and text in button */
+  padding: 0.5rem 1rem;
+  border-radius: 9999px; /* Full circle for rounded corners */
+  font-weight: 600; /* Equivalent to font-semibold */
+  transition: background-color 0.2s ease-in-out; /* Smooth transition for hover */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for buttons */
+}
+
+.header-notifications-button {
+  background-color: #e3f2fd; /* Light blue */
+  color: #2196f3; /* Blue */
+}
+
+.header-notifications-button:hover {
+  background-color: #bbdefb; /* Lighter blue on hover */
+}
+
+.header-login-button {
+  background-color: #4CAF50; /* Green */
+  color: #fff;
+}
+
+.header-login-button:hover {
+  background-color: #43A047; /* Darker green on hover */
+}
+
+/* Main Content Area */
+.main-content {
+  max-width: 80rem; /* Equivalent to max-w-7xl */
+  margin-left: auto;
+  margin-right: auto;
+  padding: 2rem 1rem;
+}
+
+/* Welcome Banner Styles */
+.welcome-banner {
+  background: linear-gradient(to right, #f8bbd0, #e1bee7, #ffe0b2); /* Pink, purple, yellow gradient */
+  padding: 2rem;
+  border-radius: 1.5rem; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Larger shadow */
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.welcome-banner-title {
+  font-size: 2.25rem; /* Equivalent to text-4xl */
+  font-weight: 800; /* Equivalent to font-extrabold */
+  color: #212121; /* Darker text */
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem; /* Space between text and icon */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.welcome-banner-title .heart-icon {
+  width: 2rem;
+  height: 2rem;
+  color: #ef5350; /* Red color for heart */
+  fill: #ef5350; /* Fill the heart icon */
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.welcome-banner-text {
+  font-size: 1.25rem; /* Equivalent to text-xl */
+  color: #424242; /* Darker gray text */
+  margin-bottom: 1rem;
+}
+
+.welcome-banner-sub-text {
+  font-size: 1.125rem; /* Equivalent to text-lg */
+  color: #616161; /* Medium gray text */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem; /* Space between text and icon */
+}
+
+.welcome-banner-sub-text .rainbow-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #673ab7; /* Indigo color for rainbow */
+}
+
+/* Learning Categories Section Styles */
+.learning-categories-section {
+  margin-top: 3rem; /* Equivalent to mt-12 */
+}
+
+.section-title {
+  font-size: 1.875rem; /* Equivalent to text-3xl */
+  font-weight: 700; /* Equivalent to font-bold */
+  text-align: center;
+  margin-bottom: 2rem; /* Equivalent to mb-8 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem; /* Space between text and icons */
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive grid columns */
+  gap: 1.5rem; /* Equivalent to gap-6 */
+}
+
+/* Category Card Styles */
+.category-card {
+  background-color: #fff;
+  padding: 1.5rem; /* Equivalent to p-6 */
+  border-radius: 1rem; /* Equivalent to rounded-2xl */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-lg */
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
+  transition: transform 0.3s ease-in-out; /* Smooth hover transition */
+}
+
+.category-card:hover {
+  transform: scale(1.03); /* Slightly enlarge on hover */
+}
+
+.category-icon-wrapper {
+  margin-bottom: 1rem; /* Equivalent to mb-4 */
+  padding: 0.75rem; /* Equivalent to p-3 */
+  background-color: #f5f5f5; /* Light gray background */
+  border-radius: 9999px; /* Full circle */
+}
+
+.category-icon {
+  width: 2.5rem; /* Equivalent to w-10 */
+  height: 2.5rem; /* Equivalent to h-10 */
+}
+
+.category-title {
+  font-size: 1.25rem; /* Equivalent to text-xl */
+  font-weight: 700; /* Equivalent to font-bold */
+  color: #212121; /* Dark gray */
+  margin-bottom: 0.5rem; /* Equivalent to mb-2 */
+}
+
+.category-description {
+  color: #424242; /* Medium gray */
+  margin-bottom: 1rem; /* Equivalent to mb-4 */
+  flex-grow: 1; /* Allows description to take available space */
+}
+
+.activities-available {
+  font-size: 0.875rem; /* Equivalent to text-sm */
+  color: #757575; /* Gray */
+  margin-bottom: 1rem; /* Equivalent to mb-4 */
+}
+
+.category-button {
+  margin-top: auto; /* Pushes button to the bottom */
+  width: 100%;
+  padding: 0.75rem 1.5rem; /* Equivalent to py-3 px-6 */
+  border-radius: 9999px; /* Full circle */
+  color: #fff;
+  font-weight: 600; /* Equivalent to font-semibold */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Button shadow */
+  transition: all 0.3s ease-in-out; /* Smooth transition for hover */
+  display: flex;
+  align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 0.5rem; /* Space between text and icon */
+  border: none; /* Remove default button border */
+  cursor: pointer; /* Indicate clickable */
 }
 
-.App-link {
-  color: #61dafb;
+.category-button:hover {
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* Larger shadow on hover */
+  filter: brightness(1.1); /* Slightly brighter on hover */
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+/* Specific button colors (gradients) */
+.button-blue {
+  background: linear-gradient(to right, #2196f3, #1976d2); /* Blue gradient */
+}
+.button-green {
+  background: linear-gradient(to right, #4CAF50, #388E3C); /* Green gradient */
+}
+.button-emerald {
+  background: linear-gradient(to right, #00C853, #00B020); /* Emerald gradient */
+}
+.button-purple {
+  background: linear-gradient(to right, #9C27B0, #7B1FA2); /* Purple gradient */
+}
+.button-pink {
+  background: linear-gradient(to right, #E91E63, #C2185B); /* Pink gradient */
+}
+.button-orange {
+  background: linear-gradient(to right, #FF9800, #F57C00); /* Orange gradient */
+}
+.button-red {
+  background: linear-gradient(to right, #F44336, #D32F2F); /* Red gradient */
+}
+.button-yellow {
+  background: linear-gradient(to right, #FFEB3B, #FBC02D); /* Yellow gradient */
+  color: #333; /* Darker text for yellow button */
+}
+
+/* Info Panels Section Styles */
+.info-panels-section {
+  margin-top: 3rem; /* Equivalent to mt-12 */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid columns */
+  gap: 1.5rem; /* Equivalent to gap-6 */
+}
+
+/* Announcement Panel */
+.announcement-panel {
+  background-color: #1976d2; /* Darker blue */
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.announcement-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.announcement-panel-header .icon {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.announcement-panel-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.announcement-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.announcement-item {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3); /* Lighter border */
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.announcement-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.announcement-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.announcement-item-title {
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+.announcement-item-time {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.announcement-item-teacher {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Teacher Message Panel */
+.teacher-message-panel {
+  background-color: #4CAF50; /* Green */
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.teacher-message-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.teacher-message-panel-header .icon {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.teacher-message-panel-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.teacher-avatar-wrapper {
+  background-color: #fff;
+  padding: 0.5rem;
+  border-radius: 9999px; /* Full circle */
+  width: 6rem; /* Fixed width for avatar */
+  height: 6rem; /* Fixed height for avatar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1); /* Inner shadow */
+}
+
+.teacher-avatar-icon {
+  width: 4rem; /* Icon size within avatar */
+  height: 4rem;
+  color: #ef5350; /* Pink color */
+}
+
+.teacher-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #212121; /* Dark text */
+  margin-bottom: 0.5rem;
+}
+
+.teacher-message-text {
+  color: #424242; /* Medium gray text */
+  margin-bottom: 1.5rem;
+  font-style: italic;
+  font-size: 1rem;
+}
+
+.teacher-message-text .sparkles-icon {
+  width: 1rem;
+  height: 1rem;
+  color: #ffeb3b; /* Yellow sparkles */
+  fill: #ffeb3b;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.teacher-button {
+  background-color: #F44336; /* Red */
+  color: #fff;
+  padding: 0.625rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease-in-out;
+  border: none;
+  cursor: pointer;
+}
+
+.teacher-button:hover {
+  background-color: #D32F2F; /* Darker red */
+}
+
+/* Upcoming Activities Panel */
+.upcoming-activities-panel {
+  background-color: #9C27B0; /* Purple */
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.upcoming-activities-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.upcoming-activities-panel-header .icon {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.upcoming-activities-panel-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.activity-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.activity-bullet {
+  display: block;
+  width: 0.75rem;
+  height: 0.75rem;
+  background-color: #fff;
+  border-radius: 9999px;
+  margin-top: 0.25rem; /* Align with text baseline */
+  flex-shrink: 0;
+}
+
+.activity-title {
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+.activity-time {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
   }
-  to {
-    transform: rotate(360deg);
+
+  .header-right {
+    width: 100%;
+    justify-content: space-around;
+    gap: 0.5rem;
+  }
+
+  .header-button {
+    flex-grow: 1;
+    justify-content: center;
+    padding: 0.75rem 0.5rem;
+  }
+
+  .header-title {
+    font-size: 1.1rem;
+  }
+
+  .header-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .welcome-banner {
+    padding: 1.5rem;
+  }
+
+  .welcome-banner-title {
+    font-size: 1.75rem; /* Smaller on mobile */
+  }
+
+  .welcome-banner-text {
+    font-size: 1rem; /* Smaller on mobile */
+  }
+
+  .welcome-banner-sub-text {
+    font-size: 0.9rem; /* Smaller on mobile */
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .category-grid,
+  .info-panels-section {
+    grid-template-columns: 1fr; /* Single column on small screens */
   }
 }
