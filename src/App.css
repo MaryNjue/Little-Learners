@@ -168,7 +168,6 @@ body {
 
 /* Category Card Styles */
 .category-card {
-  background-color: #fff;
   padding: 1.5rem; /* Equivalent to p-6 */
   border-radius: 1rem; /* Equivalent to rounded-2xl */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-lg */
@@ -177,6 +176,7 @@ body {
   align-items: center;
   text-align: center;
   transition: transform 0.3s ease-in-out; /* Smooth hover transition */
+  color: #212121; /* Dark text for contrast on light backgrounds */
 }
 
 .category-card:hover {
@@ -186,7 +186,7 @@ body {
 .category-icon-wrapper {
   margin-bottom: 1rem; /* Equivalent to mb-4 */
   padding: 0.75rem; /* Equivalent to p-3 */
-  background-color: #f5f5f5; /* Light gray background */
+  background-color: #fff; /* White background for icon wrapper */
   border-radius: 9999px; /* Full circle */
 }
 
@@ -198,19 +198,19 @@ body {
 .category-title {
   font-size: 1.25rem; /* Equivalent to text-xl */
   font-weight: 700; /* Equivalent to font-bold */
-  color: #212121; /* Dark gray */
+  color: inherit; /* Inherit from parent .category-card */
   margin-bottom: 0.5rem; /* Equivalent to mb-2 */
 }
 
 .category-description {
-  color: #424242; /* Medium gray */
+  color: inherit; /* Inherit from parent .category-card */
   margin-bottom: 1rem; /* Equivalent to mb-4 */
   flex-grow: 1; /* Allows description to take available space */
 }
 
 .activities-available {
   font-size: 0.875rem; /* Equivalent to text-sm */
-  color: #757575; /* Gray */
+  color: inherit; /* Inherit from parent .category-card */
   margin-bottom: 1rem; /* Equivalent to mb-4 */
 }
 
@@ -263,6 +263,33 @@ body {
   color: #333; /* Darker text for yellow button */
 }
 
+/* Card Background Gradients (Refined for exact match) */
+.card-bg-literacy {
+  background: linear-gradient(to bottom right, #BBDEFB, #64B5F6); /* Lighter Blue to Sky Blue */
+}
+.card-bg-numbers {
+  background: linear-gradient(to bottom right, #C8E6C9, #81C784); /* Lighter Green to Medium Green */
+}
+.card-bg-environment {
+  background: linear-gradient(to bottom right, #B2DFDB, #4DB6AC); /* Lighter Teal to Medium Teal */
+}
+.card-bg-rhymes {
+  background: linear-gradient(to bottom right, #E1BEE7, #BA68C8); /* Lighter Purple to Medium Purple */
+}
+.card-bg-games {
+  background: linear-gradient(to bottom right, #F8BBD0, #EF9A9A); /* Light Pink to Medium Pink */
+}
+.card-bg-assignments {
+  background: linear-gradient(to bottom right, #FFE0B2, #FFB74D); /* Light Orange to Medium Orange */
+}
+.card-bg-creative {
+  background: linear-gradient(to bottom right, #FFCDD2, #E57373); /* Light Red to Medium Red */
+}
+.card-bg-progress {
+  background: linear-gradient(to bottom right, #FFF9C4, #FFD54F); /* Light Yellow to Medium Yellow */
+}
+
+
 /* Info Panels Section Styles */
 .info-panels-section {
   margin-top: 3rem; /* Equivalent to mt-12 */
@@ -271,51 +298,101 @@ body {
   gap: 1.5rem; /* Equivalent to gap-6 */
 }
 
-/* Announcement Panel */
+/* Announcement Panel (Refined for exact match) */
 .announcement-panel {
-  background-color: #1976d2; /* Darker blue */
-  padding: 1.5rem;
+  padding: 0;
   border-radius: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  color: #fff;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  min-height: 300px; /* Increased min-height for more vertical space */
 }
 
 .announcement-panel-header {
+  background-color: #42A5F5; /* Exact blue from screenshot */
+  padding: 1rem 1.5rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  color: #fff;
+  flex-shrink: 0;
 }
 
 .announcement-panel-header .icon {
   width: 1.75rem;
   height: 1.75rem;
+  color: #fff;
 }
 
 .announcement-panel-header h3 {
   font-size: 1.5rem;
   font-weight: 700;
+  margin: 0;
+}
+
+.announcement-content-wrapper {
+  background-color: #fff;
+  padding: 1.25rem 1.5rem; /* Increased padding for more space */
+  flex-grow: 1;
+  color: #212121;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .announcement-list {
   list-style: none;
   padding: 0;
   margin: 0;
-  flex-grow: 1;
 }
 
 .announcement-item {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3); /* Lighter border */
+  border-bottom: 1px solid #e0e0e0;
   padding-bottom: 0.75rem;
   margin-bottom: 0.75rem;
+  position: relative;
+  padding-left: 1.5rem; /* Space for the icon */
 }
 
 .announcement-item:last-child {
   border-bottom: none;
   margin-bottom: 0;
 }
+
+/* Specific icons for announcements */
+.announcement-item .lucide-icon-sparkles {
+  position: absolute;
+  left: 0;
+  top: 0.2rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  color: #FFEB3B;
+  fill: #FFEB3B;
+}
+
+.announcement-item .lucide-icon-book {
+  position: absolute;
+  left: 0;
+  top: 0.2rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  color: #2196f3;
+  fill: #2196f3;
+}
+
+.announcement-item .lucide-icon-award {
+  position: absolute;
+  left: 0;
+  top: 0.2rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  color: #FFC107;
+  fill: #FFC107;
+}
+
 
 .announcement-item-top {
   display: flex;
@@ -326,147 +403,202 @@ body {
 
 .announcement-item-title {
   font-weight: 600;
-  font-size: 1.125rem;
+  font-size: 1rem;
+  margin: 0;
 }
 
 .announcement-item-time {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  color: #757575;
+  margin: 0;
 }
 
 .announcement-item-teacher {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  color: #757575;
+  margin: 0;
 }
 
-/* Teacher Message Panel */
+/* Teacher Message Panel (Refined for exact match) */
 .teacher-message-panel {
-  background-color: #4CAF50; /* Green */
-  padding: 1.5rem;
+  padding: 0;
   border-radius: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  color: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
+  overflow: hidden;
+  min-height: 300px; /* Increased min-height for more vertical space */
 }
 
 .teacher-message-panel-header {
+  background-color: #66BB6A; /* Exact green from screenshot */
+  padding: 1rem 1.5rem;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  color: #fff;
+  flex-shrink: 0;
+  width: 100%;
+  justify-content: center;
 }
 
 .teacher-message-panel-header .icon {
   width: 1.75rem;
   height: 1.75rem;
+  color: #fff;
 }
 
 .teacher-message-panel-header h3 {
   font-size: 1.5rem;
   font-weight: 700;
+  margin: 0;
+}
+
+.teacher-message-content-wrapper {
+  background-color: #fff;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+  padding: 1.5rem; /* Adjusted padding */
+  flex-grow: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #212121;
+  box-sizing: border-box;
 }
 
 .teacher-avatar-wrapper {
   background-color: #fff;
   padding: 0.5rem;
-  border-radius: 9999px; /* Full circle */
-  width: 6rem; /* Fixed width for avatar */
-  height: 6rem; /* Fixed height for avatar */
+  border-radius: 9999px;
+  width: 6rem;
+  height: 6rem;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 1rem;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1); /* Inner shadow */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 2px solid #F48FB1; /* Pink border from screenshot */
 }
 
 .teacher-avatar-icon {
-  width: 4rem; /* Icon size within avatar */
+  width: 4rem;
   height: 4rem;
-  color: #ef5350; /* Pink color */
+  color: #F48FB1; /* Pink color for user icon from screenshot */
 }
 
 .teacher-name {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #212121; /* Dark text */
+  color: #212121;
   margin-bottom: 0.5rem;
 }
 
 .teacher-message-text {
-  color: #424242; /* Medium gray text */
+  color: #424242;
   margin-bottom: 1.5rem;
   font-style: italic;
   font-size: 1rem;
+  line-height: 1.4;
 }
 
 .teacher-message-text .sparkles-icon {
   width: 1rem;
   height: 1rem;
-  color: #ffeb3b; /* Yellow sparkles */
-  fill: #ffeb3b;
+  color: #FFEB3B;
+  fill: #FFEB3B;
   display: inline-block;
   vertical-align: middle;
 }
 
 .teacher-button {
-  background-color: #F44336; /* Red */
+  background: linear-gradient(to right, #F48FB1, #E91E63); /* Pink gradient from screenshot */
   color: #fff;
   padding: 0.625rem 1.5rem;
   border-radius: 9999px;
   font-weight: 600;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
   border: none;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .teacher-button:hover {
-  background-color: #D32F2F; /* Darker red */
+  filter: brightness(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.teacher-button .heart-icon {
+  width: 1rem;
+  height: 1rem;
+  color: #fff;
+  fill: #fff;
 }
 
-/* Upcoming Activities Panel */
+
+/* Upcoming Activities Panel (Refined for exact match) */
 .upcoming-activities-panel {
-  background-color: #9C27B0; /* Purple */
-  padding: 1.5rem;
+  padding: 0;
   border-radius: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  color: #fff;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  min-height: 300px; /* Increased min-height for more vertical space */
 }
 
 .upcoming-activities-panel-header {
+  background-color: #AB47BC; /* Exact purple from screenshot */
+  padding: 1rem 1.5rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  color: #fff;
+  flex-shrink: 0;
 }
 
 .upcoming-activities-panel-header .icon {
   width: 1.75rem;
   height: 1.75rem;
+  color: #fff;
 }
 
 .upcoming-activities-panel-header h3 {
   font-size: 1.5rem;
   font-weight: 700;
+  margin: 0;
+}
+
+.upcoming-activities-content-wrapper {
+  background-color: #fff;
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+  padding: 1.25rem 1.5rem; /* Increased padding for more space */
+  flex-grow: 1;
+  color: #212121;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .activity-list {
   list-style: none;
   padding: 0;
   margin: 0;
-  flex-grow: 1;
 }
 
 .activity-item {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 1px solid #e0e0e0;
   padding-bottom: 0.75rem;
   margin-bottom: 0.75rem;
 }
@@ -478,22 +610,24 @@ body {
 
 .activity-bullet {
   display: block;
-  width: 0.75rem;
-  height: 0.75rem;
-  background-color: #fff;
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: #9C27B0; /* Purple bullet from screenshot */
   border-radius: 9999px;
-  margin-top: 0.25rem; /* Align with text baseline */
+  margin-top: 0.45rem;
   flex-shrink: 0;
 }
 
 .activity-title {
   font-weight: 600;
-  font-size: 1.125rem;
+  font-size: 1rem;
+  margin: 0;
 }
 
 .activity-time {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  color: #757575;
+  margin: 0;
 }
 
 
