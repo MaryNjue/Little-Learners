@@ -577,7 +577,7 @@ body {
 }
 
 .upcoming-activities-content-wrapper {
-  background-color: #fff;
+  background-color: #fff; /* White background to match other panels */
   border-bottom-left-radius: 1rem;
   border-bottom-right-radius: 1rem;
   padding: 1.25rem 1.5rem; /* Increased padding for more space */

@@ -142,10 +142,10 @@ function WelcomeBanner() {
   );
 }
 
-// Category Card Component (Updated to accept cardBackgroundClass)
+// Category Card Component
 function CategoryCard({ icon, title, description, activitiesAvailable, buttonClass, buttonText = "Let's Go!", cardBackgroundClass }) {
   return (
-    <div className={`category-card ${cardBackgroundClass}`}> {/* Apply card background class here */}
+    <div className={`category-card ${cardBackgroundClass}`}>
       <div className="category-icon-wrapper">
         {icon}
       </div>
@@ -165,9 +165,9 @@ function CategoryCard({ icon, title, description, activitiesAvailable, buttonCla
 // Announcements Panel Component
 function AnnouncementsPanel() {
   const announcements = [
-    { title: "New Fun Games Added!", time: "Today", teacher: "Teacher Sarah" },
-    { title: "Story Time Tomorrow", time: "Tomorrow", teacher: "Teacher Mike" },
-    { title: "Great Work This Week!", time: "2 days ago", teacher: "Principal Jones" },
+    { title: "New Fun Games Added!", time: "Today", teacher: "Teacher Sarah", icon: <Sparkles className="lucide-icon-sparkles" /> },
+    { title: "Story Time Tomorrow", time: "Tomorrow", teacher: "Teacher Mike", icon: <Book className="lucide-icon-book" /> },
+    { title: "Great Work This Week!", time: "2 days ago", teacher: "Principal Jones", icon: <Award className="lucide-icon-award" /> },
   ];
 
   return (
@@ -176,17 +176,20 @@ function AnnouncementsPanel() {
         <Bell className="icon" />
         <h3>Announcements</h3>
       </div>
-      <ul className="announcement-list">
-        {announcements.map((announcement, index) => (
-          <li key={index} className="announcement-item">
-            <div className="announcement-item-top">
-              <p className="announcement-item-title">{announcement.title}</p>
-              <span className="announcement-item-time">{announcement.time}</span>
-            </div>
-            <p className="announcement-item-teacher">A {announcement.teacher}</p>
-          </li>
-        ))}
-      </ul>
+      <div className="announcement-content-wrapper"> {/* Crucial wrapper */}
+        <ul className="announcement-list">
+          {announcements.map((announcement, index) => (
+            <li key={index} className="announcement-item">
+              {announcement.icon}
+              <div className="announcement-item-top">
+                <p className="announcement-item-title">{announcement.title}</p>
+                <span className="announcement-item-time">{announcement.time}</span>
+              </div>
+              <p className="announcement-item-teacher">A {announcement.teacher}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
@@ -199,17 +202,19 @@ function TeacherMessagePanel() {
         <MessageSquare className="icon" />
         <h3>Message from Teacher</h3>
       </div>
-      <div className="teacher-avatar-wrapper">
-        {/* Placeholder for teacher's image/avatar */}
-        <User className="teacher-avatar-icon" />
+      <div className="teacher-message-content-wrapper"> {/* Crucial wrapper */}
+        <div className="teacher-avatar-wrapper">
+          <User className="teacher-avatar-icon" />
+        </div>
+        <p className="teacher-name">Miss Emily</p>
+        <p className="teacher-message-text">
+          "Hello my wonderful little learners! <Sparkles className="sparkles-icon" /> I'm so proud of how hard you're all working. Remember to ask questions and have fun while learning!"
+        </p>
+        <button className="teacher-button">
+          <span>Your favorite teacher</span>
+          <Heart className="heart-icon" />
+        </button>
       </div>
-      <p className="teacher-name">Miss Emily</p>
-      <p className="teacher-message-text">
-        "Hello my wonderful little learners! <Sparkles className="sparkles-icon" /> I'm so proud of how hard you're all working. Remember to ask questions and have fun while learning!"
-      </p>
-      <button className="teacher-button">
-        Your favorite teacher
-      </button>
     </div>
   );
 }
@@ -217,10 +222,10 @@ function TeacherMessagePanel() {
 // Upcoming Activities Panel Component
 function UpcomingActivitiesPanel() {
   const activities = [
-    { title: "Art & Craft Session", day: "Monday", time: "11:00 AM" },
-    { title: "Science Discovery", day: "Wednesday", time: "10:30 AM" },
-    { title: "Music & Movement", day: "Friday", time: "2:00 PM" },
-    { title: "Show and Tell", day: "Next Monday", time: "9:00 AM" },
+    { title: "Art & Craft Session", day: "Monday", time: "11:00 AM", bulletColor: '#F48FB1' }, // Pink bullet
+    { title: "Science Discovery", day: "Wednesday", time: "10:30 AM", bulletColor: '#A5D6A7' }, // Green bullet
+    { title: "Music & Movement", day: "Friday", time: "2:00 PM", bulletColor: '#CE93D8' }, // Purple bullet
+    { title: "Show and Tell", day: "Next Monday", time: "9:00 AM", bulletColor: '#FFCC80' }, // Orange bullet
   ];
 
   return (
@@ -229,17 +234,19 @@ function UpcomingActivitiesPanel() {
         <CalendarDays className="icon" />
         <h3>Upcoming Activities</h3>
       </div>
-      <ul className="activity-list">
-        {activities.map((activity, index) => (
-          <li key={index} className="activity-item">
-            <span className="activity-bullet"></span>
-            <div>
-              <p className="activity-title">{activity.title}</p>
-              <p className="activity-time">{activity.day}, {activity.time}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div className="upcoming-activities-content-wrapper"> {/* Crucial wrapper */}
+        <ul className="activity-list">
+          {activities.map((activity, index) => (
+            <li key={index} className="activity-item">
+              <span className="activity-bullet" style={{ backgroundColor: activity.bulletColor }}></span>
+              <div>
+                <p className="activity-title">{activity.title}</p>
+                <p className="activity-time">{activity.day}, {activity.time}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
