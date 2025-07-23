@@ -107,8 +107,8 @@ function Header() {
       <div className="header-left">
         <Home className="header-home-icon" />
         <div>
-          <h1 className="header-title">Little Learners</h1>
-          <p className="header-subtitle">Preschool E-Learning Portal</p>
+          <h1 className="header-title">MamaBear Digital</h1>
+          <p className="header-subtitle">Explore. Learn. Achieve</p>
         </div>
       </div>
       <div className="header-right">
@@ -130,7 +130,7 @@ function WelcomeBanner() {
   return (
     <div className="welcome-banner">
       <h2 className="welcome-banner-title">
-        Welcome, Little Learner! <Heart className="heart-icon" />
+        Welcome to MamaBear Digital <Heart className="heart-icon" />
       </h2>
       <p className="welcome-banner-text">
         Ready to explore, learn, and have fun today?
