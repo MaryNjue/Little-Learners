@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 import StudentPortal from './Components/StudentPortal';
-import TeacherPortal from './Components/TeacherPortal'; // Adjusted path based on common structure
+import TeacherPortal from './Components/TeacherPortal'; // Corrected path
 import './App.css';
 
 // Manually define Firebase config from environment variables
@@ -24,19 +24,18 @@ function App() {
   const [firebaseInitError, setFirebaseInitError] = useState(null);
   const [db, setDb] = useState(null);
   const [auth, setAuth] = useState(null);
+  const [needsRoleSelection, setNeedsRoleSelection] = useState(false); // New state for role selection
 
   // Define appId and userId here to be accessible in the render block
-  // Ensure we trim any comments or extra whitespace from the .env value
   const appId = (process.env.REACT_APP_APP_ID || 'local-dev-app-id').split('#')[0].trim();
-  const userId = user?.uid || 'unknown-user-id'; // Use optional chaining for user.uid
+  const userId = user?.uid || 'unknown-user-id';
 
   useEffect(() => {
     let app, firestore, authInstance;
-    let unsubscribeAuth = () => {}; // Placeholder for auth listener cleanup
-    let unsubscribeFirestore = () => {}; // Placeholder for firestore listener cleanup
+    let unsubscribeAuth = () => {};
+    let unsubscribeFirestore = () => {};
 
     try {
-      // Check if essential config is present
       if (!firebaseConfig.projectId || !firebaseConfig.apiKey) {
         setFirebaseInitError("Firebase 'projectId' or 'apiKey' not provided in your .env file. Please check your .env configuration.");
         setLoading(false);
@@ -50,7 +49,6 @@ function App() {
       setDb(firestore);
       setAuth(authInstance);
 
-      // In local development, we'll sign in anonymously by default
       signInAnonymously(authInstance)
         .then(() => console.log("Signed in anonymously for local development."))
         .catch(error => {
@@ -62,26 +60,22 @@ function App() {
       unsubscribeAuth = onAuthStateChanged(authInstance, async (currentUser) => {
         if (currentUser) {
           setUser(currentUser);
-          // Log the current user's UID directly here
           console.log("Current Authenticated User ID:", currentUser.uid);
 
           const userDocRef = doc(firestore, `artifacts/${appId}/users/${currentUser.uid}`);
 
-          // Set up real-time listener for the user document
           unsubscribeFirestore = onSnapshot(userDocRef, (userDocSnap) => {
             if (userDocSnap.exists()) {
               const userData = userDocSnap.data();
               setUserRole(userData.role);
+              setNeedsRoleSelection(false); // Role found, no selection needed
               console.log("User role fetched (real-time):", userData.role);
             } else {
-              // If user document doesn't exist, create it with a default 'student' role
-              console.warn("User document not found. Creating with default 'student' role.");
-              setDoc(userDocRef, { role: 'student' })
-                .then(() => setUserRole('student'))
-                .catch(error => console.error("Error setting default role:", error));
+              // User document not found, prompt for role selection
+              console.warn("User document not found. Prompting for role selection.");
+              setUserRole(null); // Clear role until selected
+              setNeedsRoleSelection(true); // Show role selection UI
             }
-            // Only set loading to false once the role is determined (initial load)
-            // This ensures the correct portal is shown after the first fetch/creation
             setLoading(false);
           }, (error) => {
             console.error("Error listening to user document:", error);
@@ -92,12 +86,12 @@ function App() {
         } else {
           setUser(null);
           setUserRole(null);
-          setLoading(false); // If no user, stop loading and show login prompt
+          setNeedsRoleSelection(false); // No user, no role selection needed
+          setLoading(false);
           console.log("User signed out or no user.");
         }
       });
 
-      // Cleanup subscriptions on unmount
       return () => {
         unsubscribeAuth();
         unsubscribeFirestore();
@@ -107,7 +101,22 @@ function App() {
       setFirebaseInitError(`Firebase initialization failed: ${error.message}. Please check your .env file.`);
       setLoading(false);
     }
-  }, []); // Empty dependency array means this effect runs once on mount
+  }, []);
+
+  // Function to handle role selection
+  const handleRoleSelection = async (role) => {
+    if (user && db) {
+      const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}`);
+      try {
+        await setDoc(userDocRef, { role: role });
+        console.log(`Role set to: ${role} for user: ${user.uid}`);
+        // onSnapshot will automatically update userRole state
+      } catch (error) {
+        console.error("Error setting user role:", error);
+        setFirebaseInitError(`Failed to set role: ${error.message}`);
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -130,12 +139,41 @@ function App() {
     );
   }
 
+  // New UI for role selection
+  if (needsRoleSelection) {
+    return (
+      <div className="app-container flex flex-col items-center justify-center min-h-screen text-center p-4">
+        <h2 className="text-3xl font-bold mb-6 text-purple-700">Welcome to Little Learners!</h2>
+        <p className="text-xl mb-8 text-gray-700">It looks like you're new here. Please select your role:</p>
+        <div className="flex space-x-6">
+          <button
+            onClick={() => handleRoleSelection('student')}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-200 ease-in-out transform hover:scale-105"
+          >
+            I am a Student
+          </button>
+          <button
+            onClick={() => handleRoleSelection('teacher')}
+            className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-200 ease-in-out transform hover:scale-105"
+          >
+            I am a Teacher
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mt-8">
+          Current App ID: **{appId}**<br/>
+          Current User ID: **{userId}**
+        </p>
+      </div>
+    );
+  }
+
+  // Conditional rendering based on user role (after selection)
   if (userRole === 'teacher') {
     return <TeacherPortal />;
   } else if (userRole === 'student') {
     return <StudentPortal />;
   } else {
-    // Default view if no role or unauthenticated
+    // Fallback if role is null but not in selection state (shouldn't happen with this logic)
     return (
       <div className="app-container flex flex-col items-center justify-center min-h-screen">
         <h2 className="text-2xl font-bold mb-4">Welcome to Little Learners!</h2>
