@@ -28,7 +28,7 @@ function App() {
 
   // Define appId and userId here to be accessible in the render block
   const appId = (process.env.REACT_APP_APP_ID || 'local-dev-app-id').split('#')[0].trim();
-  const userId = user?.uid || 'unknown-user-id';
+  const userId = user?.uid || 'unknown-user-id'; // Use optional chaining for user.uid
 
   useEffect(() => {
     let app, firestore, authInstance;
