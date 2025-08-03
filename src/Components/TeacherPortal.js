@@ -1,14 +1,33 @@
-import React, { useState } from 'react';
-import { Users, BookOpen, MessageSquare, CalendarDays, BarChart2, Settings, LogOut, Home } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, BookOpen, MessageSquare, CalendarDays, BarChart2, Settings, LogOut, Home, FileText } from 'lucide-react';
 import '../App.css'; // Import the main CSS file for global styles
 import './TeacherPortal.css'; // Import specific styles for TeacherPortal
-import StudentManagement from './StudentManager/StudentManagement'
+import StudentManagement from './StudentManager/StudentManagement';
+import AssignmentManager from './assignmentManager/Assignment';
 
-function TeacherPortal() {
-  // State to manage the active view in the teacher portal
-  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard' or 'student-management'
+// NO Firebase Imports are needed here anymore, as App.js handles global initialization
+// and provides relevant data via props or context if needed by children.
 
-  // Dummy data for dashboard overview (remains for dashboard view)
+function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogout }) { // <-- Make sure handleLogout is accepted here
+  const [activeView, setActiveView] = useState('dashboard');
+  const [loading, setLoading] = useState(true);
+
+  // UseEffect to manage loading state based on required props being available
+  useEffect(() => {
+    console.log("TeacherPortal: Received Teacher ID:", loggedInTeacherId);
+    console.log("TeacherPortal: Received Teacher Username:", loggedInTeacherUsername);
+
+    // Set loading to false once loggedInTeacherId and Username are available.
+    // This ensures the content renders only after necessary data from App.js is passed down.
+    if (loggedInTeacherId && loggedInTeacherUsername) {
+      setLoading(false);
+    } else {
+      // If for some reason props are not immediately available, keep loading
+      setLoading(true);
+    }
+  }, [loggedInTeacherId, loggedInTeacherUsername]); // Re-run effect if these props change
+
+  // Dummy data for dashboard overview (remains as in your original file)
   const totalStudents = 25;
   const activeAssignments = 10;
   const unreadMessages = 3;
@@ -16,6 +35,15 @@ function TeacherPortal() {
 
   // Function to render the content based on activeView
   const renderContent = () => {
+    if (loading) {
+      // Show a loading message while TeacherPortal waits for props from App.js
+      return (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-gray-500 text-lg">Loading Teacher Portal content...</p>
+        </div>
+      );
+    }
+
     switch (activeView) {
       case 'dashboard':
         return (
@@ -30,13 +58,14 @@ function TeacherPortal() {
                   <Settings className="teacher-action-button-icon" />
                 </button>
                 <div className="teacher-avatar-info">
+                  {/* Display loggedInTeacherUsername here */}
                   <img src="https://placehold.co/40x40/FFC107/FFFFFF?text=TE" alt="Teacher Avatar" className="teacher-avatar-img" />
-                  <span className="teacher-name">Miss Emily</span>
+                  <span className="teacher-name">{loggedInTeacherUsername || 'Teacher'}</span>
                 </div>
               </div>
             </div>
 
-            {/* Overview Cards */}
+            {/* Overview Cards (structure remains as per your original file) */}
             <div className="dashboard-cards-grid">
               <DashboardCard
                 title="Total Students"
@@ -72,7 +101,7 @@ function TeacherPortal() {
                   <h3 className="quick-action-card-title">Manage Students</h3>
                   <p className="quick-action-card-text">Add new students, view profiles, or update information.</p>
                   <button
-                    onClick={() => setActiveView('student-management')} // Navigate to student management
+                    onClick={() => setActiveView('student-management')}
                     className="quick-action-button"
                   >
                     Go to Students
@@ -81,7 +110,10 @@ function TeacherPortal() {
                 <div className="quick-action-card indigo">
                   <h3 className="quick-action-card-title">Create New Assignment</h3>
                   <p className="quick-action-card-text">Design and assign new learning activities for your class.</p>
-                  <button className="quick-action-button indigo">
+                  <button
+                    onClick={() => setActiveView('assignments')}
+                    className="quick-action-button indigo"
+                  >
                     Create Assignment
                   </button>
                 </div>
@@ -98,8 +130,26 @@ function TeacherPortal() {
           </>
         );
       case 'student-management':
-        return <StudentManagement />;
-      // Add other cases for 'content-assignments', 'communication', 'calendar' later
+        // Pass necessary props to StudentManagement
+        return (
+          <StudentManagement
+            loggedInTeacherId={loggedInTeacherId}
+            loggedInTeacherUsername={loggedInTeacherUsername}
+          />
+        );
+       case 'assignments':
+      // This is the important part: rendering the AssignmentManager
+      return (
+        <AssignmentManager
+          loggedInTeacherId={loggedInTeacherId}
+          loggedInTeacherUsername={loggedInTeacherUsername}
+        />
+      );
+        
+      case 'analytics':
+        return <h2>Analytics and Reports</h2>;
+      case 'settings':
+        return <h2>Settings</h2>;
       default:
         return <div>Page not found.</div>;
     }
@@ -107,7 +157,7 @@ function TeacherPortal() {
 
   return (
     <div className="teacher-portal-container">
-      {/* Sidebar Navigation */}
+      {/* Sidebar Navigation (structure remains as per your original file) */}
       <aside className="teacher-sidebar">
         <div>
           <div className="teacher-sidebar-header">
@@ -137,8 +187,12 @@ function TeacherPortal() {
                 </a>
               </li>
               <li className="teacher-nav-item">
-                <a href="#" className="teacher-nav-link">
-                  <BookOpen className="teacher-nav-link-icon" />
+                <a
+                  href="#"
+                  onClick={() => setActiveView('assignments')}
+                  className={`teacher-nav-link ${activeView === 'assignments' ? 'active' : ''}`}
+                >
+                  <FileText className="teacher-nav-link-icon" />
                   Content & Assignments
                 </a>
               </li>
@@ -159,7 +213,8 @@ function TeacherPortal() {
         </div>
         {/* Logout Button */}
         <div>
-          <button className="teacher-logout-button">
+          {/* Now uses the handleLogout prop passed from App.js */}
+          <button className="teacher-logout-button" onClick={handleLogout}> {/* <-- ADDED onClick={handleLogout} */}
             <LogOut className="teacher-nav-link-icon" />
             Logout
           </button>

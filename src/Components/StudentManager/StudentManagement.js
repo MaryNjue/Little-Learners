@@ -1,29 +1,50 @@
-import React, { useState } from 'react';
-// Corrected CSS import path to match 'StudentManager' folder if that's your local setup
-import '../StudentManager/StudentManager.css'; // Assuming StudentManagement.js is inside src/Components/StudentManager/
+import React, { useState, useEffect } from 'react';
+import '../StudentManager/StudentManager.css';
 
-import { Search, Users, Plus, TrendingUp, TrendingDown, X } from 'lucide-react'; // Added X icon for closing modal
+import { Search, Users, Plus, TrendingUp, TrendingDown, X } from 'lucide-react';
 
-function StudentManagement() {
-  // Dummy student data with 'isActive' boolean instead of 'age'
-  const [students, setStudents] = useState([
-    { id: 's1', avatar: 'https://placehold.co/40x40/FFC107/FFFFFF?text=TS', fullName: 'Tommy Smith', regNum: 'A123BC', grade: 7, gender: 'Male', isActive: true, parentName: 'Oliver Thompson', performanceScore: 95 },
-    { id: 's2', avatar: 'https://placehold.co/40x40/FFC107/FFFFFF?text=LS', fullName: 'Lucy Brown', regNum: 'B456DE', grade: 12, gender: 'Female', isActive: true, parentName: 'Emily Thompson', performanceScore: 88 },
-    { id: 's3', avatar: 'https://placehold.co/40x40/FFC107/FFFFFF?text=JW', fullName: 'Jake White', regNum: 'C789FG', grade: 3, gender: 'Male', isActive: false, parentName: 'James Smith', performanceScore: 72 },
-    { id: 's4', avatar: 'https://placehold.co/40x40/FFC107/FFFFFF?text=EG', fullName: 'Ella Green', regNum: 'D012HI', grade: 10, gender: 'Female', isActive: true, parentName: 'Charlotte Smith', performanceScore: 60 },
-    { id: 's5', avatar: 'https://placehold.co/40x40/FFC107/FFFFFF?text=MJ', fullName: 'Max Jones', regNum: 'E345JK', grade: 5, gender: 'Male', isActive: true, parentName: 'Henry Johnson', performanceScore: 98 }, // Most performing
-    { id: 's6', avatar: 'https://placehold.co/40x40/FFC107/FFFFFF?text=ZL', fullName: 'Zoe Taylor', regNum: 'F678LM', grade: 9, gender: 'Female', isActive: false, parentName: 'Amelia Johnson', performanceScore: 81 },
-    { id: 's7', avatar: 'https://placehold.co/40x40/FFC107/FFFFFF?text=LC', fullName: 'Leo Clark', regNum: 'G901NO', grade: 1, gender: 'Male', isActive: true, parentName: 'George Brown', performanceScore: 55 }, // Least performing
-    { id: 's8', avatar: 'https://placehold.co/40x40/FFC107/FFFFFF?text=MA', fullName: 'Mia Adams', regNum: 'H234PQ', grade: 8, gender: 'Female', isActive: true, parentName: 'Isabella Brown', performanceScore: 79 },
-  ]);
+// Make sure StudentManagement accepts props here
+function StudentManagement({ loggedInTeacherId, loggedInTeacherUsername }) {
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const studentsPerPage = 7; // Matching screenshot's visible rows
+  const studentsPerPage = 7;
 
-  // New states for modal management
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentStudent, setCurrentStudent] = useState(null); // Student being edited, or null for new student
+  const [currentStudent, setCurrentStudent] = useState(null);
+
+  // You might want to log these props to confirm they are being passed correctly
+  useEffect(() => {
+    console.log("StudentManagement received Teacher ID:", loggedInTeacherId);
+    console.log("StudentManagement received Teacher Username:", loggedInTeacherUsername);
+  }, [loggedInTeacherId, loggedInTeacherUsername]); // Re-run if props change
+
+  // Function to fetch students from the backend API
+  const fetchStudents = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('http://localhost:8080/api/students');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setStudents(data);
+    } catch (err) {
+      console.error("Failed to fetch students:", err);
+      setError("Failed to load students. Please ensure the backend is running and reachable.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // useEffect to fetch students when the component mounts
+  useEffect(() => {
+    fetchStudents();
+  }, []);
 
   // Filter students based on searchTerm
   const filteredStudents = students.filter(student =>
@@ -41,7 +62,6 @@ function StudentManagement() {
 
   // Dynamic data for overview cards
   const totalStudentsCount = students.length;
-  // Ensure students array is not empty before calling reduce
   const mostPerformingStudent = students.length > 0 ? students.reduce((prev, current) => (prev.performanceScore > current.performanceScore ? prev : current), students[0]) : null;
   const leastPerformingStudent = students.length > 0 ? students.reduce((prev, current) => (prev.performanceScore < current.performanceScore ? prev : current), students[0]) : null;
 
@@ -51,55 +71,84 @@ function StudentManagement() {
   console.log("Least Performing Student (on render):", leastPerformingStudent ? leastPerformingStudent.fullName : 'N/A', leastPerformingStudent ? leastPerformingStudent.performanceScore : 'N/A');
 
 
-  // Handler for toggling student active status
-  const handleToggleActive = (studentId) => {
-    setStudents(prevStudents =>
-      prevStudents.map(student =>
-        student.id === studentId ? { ...student, isActive: !student.isActive } : student
-      )
-    );
+  // Handler for toggling student active status - NOW CONNECTED TO API
+  const handleToggleActive = async (studentId) => {
+    const studentToUpdate = students.find(student => student.id === studentId);
+    if (!studentToUpdate) return;
+
+    const updatedStudentData = { ...studentToUpdate, isActive: !studentToUpdate.isActive };
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/students/${studentId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedStudentData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      // If successful, re-fetch students to update the UI with backend's data
+      await fetchStudents();
+      alert(`Student ${studentToUpdate.fullName}'s status updated successfully!`);
+    } catch (err) {
+      console.error("Failed to toggle student status:", err);
+      setError("Failed to update student status.");
+      alert("Failed to update student status. Check console for details.");
+    }
   };
 
-  // Functions for CRUD operations (placeholders for now)
+
+  // Functions for CRUD operations (Implementing API calls)
   const handleAddStudent = () => {
-    setCurrentStudent(null); // Clear any previous student data for a new entry
-    setIsModalOpen(true); // Open the modal
+    setCurrentStudent(null);
+    setIsModalOpen(true);
   };
 
   const handleEditStudent = (studentId) => {
     const studentToEdit = students.find(student => student.id === studentId);
-    setCurrentStudent(studentToEdit); // Set the student data for editing
-    setIsModalOpen(true); // Open the modal
+    setCurrentStudent(studentToEdit);
+    setIsModalOpen(true);
   };
 
-  const handleDeleteStudent = (studentId) => {
+  // Handler for deleting student - NOW CONNECTED TO API
+  const handleDeleteStudent = async (studentId) => {
     const studentToDelete = students.find(student => student.id === studentId);
-    if (window.confirm(`Are you sure you want to delete student ${studentToDelete ? studentToDelete.fullName : studentId}?`)) {
-      setStudents(prevStudents => {
-        const updatedStudents = prevStudents.filter(student => student.id !== studentId);
-        // If the deleted student was the last one on the current page, go back one page
-        if (currentStudents.length === 1 && currentPage > 1 && updatedStudents.length > 0) {
-          setCurrentPage(currentPage - 1);
-        } else if (updatedStudents.length === 0 && currentPage > 1) { // If no students left, go to page 1
-          setCurrentPage(1);
+    if (!studentToDelete) return;
+
+    if (window.confirm(`Are you sure you want to delete student ${studentToDelete.fullName}?`)) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/students/${studentId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return updatedStudents;
-      });
-      alert(`Student ${studentToDelete ? studentToDelete.fullName : studentId} deleted successfully!`);
+        // If successful, re-fetch students to update the UI
+        await fetchStudents();
+        alert(`Student ${studentToDelete.fullName} deleted successfully!`);
+      } catch (err) {
+        console.error("Failed to delete student:", err);
+        setError("Failed to delete student.");
+        alert("Failed to delete student. Check console for details.");
+      }
     }
   };
 
-  // Renamed from handleViewStudent to clarify its new purpose
   const handleViewOrEditStudent = (studentId) => {
-    handleEditStudent(studentId); // Now calls edit function
+    handleEditStudent(studentId);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setCurrentStudent(null); // Clear current student when modal closes
+    setCurrentStudent(null);
   };
 
-  const handleSubmitStudentForm = (event) => {
+  // This handles the form submission for adding/editing - NOW CONNECTED TO API
+  const handleSubmitStudentForm = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
     const studentData = {
@@ -109,26 +158,46 @@ function StudentManagement() {
       gender: formData.get('gender'),
       parentName: formData.get('parentName'),
       performanceScore: parseInt(formData.get('performanceScore')),
-      isActive: formData.get('isActive') === 'on' ? true : false, // Checkbox value is 'on' if checked
+      isActive: formData.get('isActive') === 'on' ? true : false,
+      // --- CRITICAL CHANGE HERE ---
+      // For ADDING a new student (currentStudent is null), use the prop
+      teacherId: currentStudent ? currentStudent.teacherId : loggedInTeacherId,
+      teacherUsername: currentStudent ? currentStudent.teacherUsername : loggedInTeacherUsername
     };
 
+    let url = 'http://localhost:8080/api/students';
+    let method = 'POST';
+
     if (currentStudent) {
-      // Editing existing student
-      setStudents(prevStudents =>
-        prevStudents.map(student =>
-          student.id === currentStudent.id ? { ...student, ...studentData } : student
-        )
-      );
-      alert(`Student ${studentData.fullName} updated successfully!`);
-    } else {
-      // Adding new student
-      // A more robust ID generation would be using a UUID library (e.g., uuidv4())
-      // For now, a simple incrementing ID based on current length
-      const newId = `s${students.length + 1}-${Date.now()}`; // Added timestamp for better uniqueness
-      setStudents(prevStudents => [...prevStudents, { id: newId, ...studentData }]);
-      alert(`New student ${studentData.fullName} added successfully!`);
+      // If editing, append ID to URL and change method to PUT
+      url = `http://localhost:8080/api/students/${currentStudent.id}`;
+      method = 'PUT';
     }
-    handleCloseModal();
+
+    try {
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(studentData),
+      });
+
+      if (!response.ok) {
+        // Attempt to read error message from backend if available
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+      }
+
+      // If successful, re-fetch students to update the UI with backend's latest data
+      await fetchStudents();
+      alert(`Student ${studentData.fullName} ${currentStudent ? 'updated' : 'added'} successfully!`);
+      handleCloseModal(); // Close modal on success
+    } catch (err) {
+      console.error("Failed to save student:", err);
+      setError("Failed to save student. Check console for details.");
+      alert(`Failed to save student: ${err.message}. Check console for details.`);
+    }
   };
 
 
@@ -179,73 +248,81 @@ function StudentManagement() {
         </button>
       </div>
 
-      {/* Student List Table */}
-      <div className="student-list-section">
-        <table className="student-table">
-          <thead>
-            <tr>
-              <th><input type="checkbox" /></th>
-              <th>Full Name</th>
-              <th>Reg Num</th>
-              <th>Grade</th>
-              <th>Gender</th>
-              <th>Active</th>
-              <th>Parent's Name</th>
-              <th>Performance</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentStudents.map(student => (
-              <tr key={student.id}>
-                <td><input type="checkbox" /></td>
-                <td className="student-name-cell">
-                  {student.fullName}
-                </td>
-                <td>{student.regNum}</td>
-                <td>{student.grade}</td>
-                <td>{student.gender}</td>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={student.isActive}
-                    onChange={() => handleToggleActive(student.id)}
-                    className="active-checkbox"
-                  />
-                </td>
-                <td>{student.parentName}</td>
-                <td>{student.performanceScore}%</td>
-                <td>
-                  {/* Changed button to trigger edit modal */}
-                  <button onClick={() => handleViewOrEditStudent(student.id)} className="table-action-button view">Edit</button>
-                  <button onClick={() => handleDeleteStudent(student.id)} className="table-action-button delete">Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Conditional rendering for loading, error, and no students */}
+      {loading && <p className="loading-message">Loading students...</p>}
+      {error && <p className="error-message">{error}</p>}
+      {!loading && !error && students.length === 0 && (
+        <p className="no-students-message">No students found. Add one now!</p>
+      )}
 
-        {/* Pagination */}
-        <div className="pagination">
-          <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className="pagination-button">
-            ← Previous
-          </button>
-          <div className="page-numbers">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => paginate(i + 1)}
-                className={`page-number-button ${currentPage === i + 1 ? 'active' : ''}`}
-              >
-                {i + 1}
-              </button>
-            ))}
+      {/* Student List Table */}
+      {!loading && !error && students.length > 0 && (
+        <div className="student-list-section">
+          <table className="student-table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" /></th>
+                <th>Full Name</th>
+                <th>Reg Num</th>
+                <th>Grade</th>
+                <th>Gender</th>
+                <th>Active</th>
+                <th>Parent's Name</th>
+                <th>Performance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentStudents.map(student => (
+                <tr key={student.id}>
+                  <td><input type="checkbox" /></td>
+                  <td className="student-name-cell">
+                    {student.fullName}
+                  </td>
+                  <td>{student.regNum}</td>
+                  <td>{student.grade}</td>
+                  <td>{student.gender}</td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={student.isActive}
+                      onChange={() => handleToggleActive(student.id)} // Calls API now
+                      className="active-checkbox"
+                    />
+                  </td>
+                  <td>{student.parentName}</td>
+                  <td>{student.performanceScore}%</td>
+                  <td>
+                    <button onClick={() => handleViewOrEditStudent(student.id)} className="table-action-button view">Edit</button>
+                    <button onClick={() => handleDeleteStudent(student.id)} className="table-action-button delete">Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Pagination */}
+          <div className="pagination">
+            <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className="pagination-button">
+              ← Previous
+            </button>
+            <div className="page-numbers">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => paginate(i + 1)}
+                  className={`page-number-button ${currentPage === i + 1 ? 'active' : ''}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} className="pagination-button">
+              Next →
+            </button>
           </div>
-          <button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} className="pagination-button">
-            Next →
-          </button>
         </div>
-      </div>
+      )}
 
       {/* Add/Edit Student Modal */}
       {isModalOpen && (

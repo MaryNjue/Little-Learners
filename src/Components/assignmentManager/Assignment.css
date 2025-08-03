@@ -1,0 +1,434 @@
+/* src/Components/assignmentManager/AssignmentManager.css */
+
+/* --- General Container & Titles --- */
+.assignment-dashboard-container {
+    padding: 2.5rem; /* 40px */
+    background-color: #f8faff; /* Light background */
+    min-height: calc(100vh - 80px); /* Adjust based on header height */
+    border-radius: 0.75rem; /* 12px */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+.main-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 2rem; /* Increased spacing */
+    display: flex;
+    align-items: center;
+}
+
+.main-title-icon {
+    margin-right: 0.75rem;
+    color: #3498db;
+    font-size: 2.5rem; /* Larger icon */
+}
+
+.section-title {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #34495e;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #ecf0f1;
+    padding-bottom: 0.5rem;
+}
+
+.section-description {
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 1.5rem;
+}
+
+/* --- Dashboard Cards Grid --- */
+.dashboard-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.dashboard-card {
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.card-icon-wrapper {
+    margin-right: 1rem;
+    padding: 0.8rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dashboard-card svg { /* Icons inside dashboard cards */
+    width: 28px;
+    height: 28px;
+    color: currentColor; /* Inherit color from parent for easier theming */
+}
+
+/* Specific background and text colors for dashboard cards */
+.bg-blue-50 .card-icon-wrapper { background-color: #e3f2fd; } /* light blue */
+.bg-blue-50 svg { color: #2196f3; }
+.text-blue-700 { color: #1976d2; }
+
+.bg-green-50 .card-icon-wrapper { background-color: #e8f5e9; } /* light green */
+.bg-green-50 svg { color: #4caf50; }
+.text-green-700 { color: #388e3c; }
+
+.bg-yellow-50 .card-icon-wrapper { background-color: #fffde7; } /* light yellow */
+.bg-yellow-50 svg { color: #ffeb3b; }
+.text-yellow-700 { color: #fbc02d; }
+
+.bg-red-50 .card-icon-wrapper { background-color: #ffebee; } /* light red */
+.bg-red-50 svg { color: #f44336; }
+.text-red-700 { color: #d32f2f; }
+
+
+.dashboard-card .card-title {
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 0.3rem;
+    font-weight: 500;
+}
+
+.dashboard-card .card-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+/* --- Section Cards (My Assignments, Quick Actions, Recent Activity) --- */
+.section-card {
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* --- My Assignments Section --- */
+.my-assignments-section .manage-button {
+    background-color: #3498db;
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+    border: none;
+    cursor: pointer;
+}
+
+.my-assignments-section .manage-button:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.my-assignments-section .manage-button svg {
+    margin-right: 0.5rem;
+}
+
+/* --- Quick Actions Section --- */
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.quick-action-button {
+    background-color: #e9f5ff; /* Lighter blue background */
+    color: #2196f3; /* Blue text */
+    padding: 1rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: 1px solid #cce7ff;
+    cursor: pointer;
+}
+
+.quick-action-button:hover {
+    background-color: #d1efff;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+.quick-action-button .icon {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 0.5rem;
+    color: #3498db; /* Stronger blue for icon */
+}
+
+/* --- Recent Activity Section --- */
+.activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.activity-list li {
+    padding: 0.8rem 0;
+    border-bottom: 1px dashed #ecf0f1;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.activity-list li:last-child {
+    border-bottom: none;
+}
+
+/* --- Detailed Assignment Table View (when toggled) --- */
+.detailed-assignment-table {
+    margin-top: 2rem; /* Space from dashboard elements */
+}
+
+.back-to-dashboard-button {
+    background-color: #e74c3c;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.back-to-dashboard-button:hover {
+    background-color: #c0392b;
+}
+
+
+/* --- Existing Table Styles (adjusted to fit new context) --- */
+.flex.flex-col.sm\:flex-row.justify-between.items-center.mb-6.space-y-4.sm\:space-y-0 {
+    margin-top: 1.5rem; /* Space below the "All Assignments" title */
+}
+
+.relative.w-full.sm\:w-1\/3 { /* Search input wrapper */
+    /* Adjust width if needed for better fit in the toggled view */
+    max-width: 300px; /* Example */
+}
+
+.pl-10.pr-4.py-2.border.rounded-full.w-full.focus\:outline-none.focus\:ring-2.focus\:ring-blue-500 { /* Search input */
+    box-shadow: none; /* Remove extra shadow */
+    border-color: #dde1e6;
+}
+
+.px-6.py-2.bg-blue-600.text-white.rounded-full.shadow-lg.hover\:bg-blue-700.transition-colors.flex.items-center { /* Add New Assignment button */
+    /* Utility classes provide most of the styling. Adding specific hover/transition effects. */
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+}
+
+
+.overflow-x-auto.bg-white.rounded-lg.shadow { /* Table container */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); /* Stronger shadow for the table block */
+}
+
+.min-w-full.table-auto.border-collapse { /* Table itself */
+    min-width: 800px; /* Ensure table doesn't collapse too much on small screens */
+}
+
+.bg-gray-100.border-b.border-gray-200 { /* Table header */
+    /* Already styled well with utility classes */
+}
+
+.px-6.py-3.text-left.text-xs.font-semibold.text-gray-600.uppercase.tracking-wider { /* Table header cells */
+    color: #555;
+    letter-spacing: 0.05em;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.divide-y.divide-gray-200 { /* Table body */
+    /* Utility class for row dividers */
+}
+
+.hover\:bg-gray-50.transition-colors { /* Table rows on hover */
+    /* Utility classes provide good hover effect */
+}
+
+.px-6.py-4.whitespace-nowrap.text-sm { /* Table cells */
+    color: #444;
+}
+
+.px-6.py-4.whitespace-nowrap.text-sm.font-medium.text-gray-900 { /* Title cell */
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* Status Badges */
+.px-2.inline-flex.text-xs.leading-5.font-semibold.rounded-full { /* Base for status badges */
+    padding: 0.3em 0.6em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.bg-green-100.text-green-800 { /* Published status */
+    /* Utility classes are clear here */
+}
+
+.bg-yellow-100.text-yellow-800 { /* Draft status */
+    /* Utility classes are clear here */
+}
+
+/* Action Buttons (Edit, Delete) */
+.text-blue-600.hover\:text-blue-900.mr-3.p-1.rounded-full.hover\:bg-blue-100.transition-colors { /* Edit button */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.text-red-600.hover\:text-red-900.p-1.rounded-full.hover\:bg-red-100.transition-colors { /* Delete button */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* No Assignments Found Message */
+.p-6.text-center.text-gray-600 { /* No assignments text */
+    font-style: italic;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+/* --- Modal Styling (remains largely the same) --- */
+.fixed.inset-0.bg-gray-600.bg-opacity-50.flex.justify-center.items-center.p-4.z-50 { /* Modal overlay */
+    /* Full screen overlay with semi-transparent background */
+}
+
+.bg-white.p-8.rounded-lg.shadow-xl.w-full.max-w-md { /* Modal content box */
+    max-height: 90vh; /* Prevent modal from being too tall on small screens */
+    overflow-y: auto; /* Allow scrolling if content overflows */
+    animation: fadeIn 0.3s ease-out; /* Simple fade-in animation */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.flex.justify-between.items-center.mb-6 { /* Modal header */
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem !important; /* Override default mb-6 from component */
+}
+
+h3.text-2xl.font-bold.text-gray-800 { /* Modal title */
+    color: #2c3e50;
+}
+
+.text-gray-500.hover\:text-gray-700 { /* Close modal button (X icon) */
+    /* Utility classes sufficient */
+}
+
+.space-y-4 { /* Form groups spacing */
+    /* Utility classes provide good spacing */
+}
+
+/* Form Group Labels and Inputs */
+.block.text-sm.font-medium.text-gray-700 { /* Labels */
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.mt-1.block.w-full.border.border-gray-300.rounded-md.shadow-sm.p-2.focus\:ring-blue-500.focus\:border-blue-500 { /* Inputs and Textareas */
+    transition: all 0.2s ease;
+}
+
+.mt-1.block.w-full.border.border-gray-300.rounded-md.shadow-sm.p-2.focus\:ring-blue-500.focus\:border-blue-500:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+/* Modal Actions (Save/Cancel Buttons) */
+.flex.justify-end.space-x-3.mt-6 { /* Button container */
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.px-5.py-2.border.border-gray-300.rounded-md.text-gray-700.hover\:bg-gray-50.transition-colors { /* Cancel button */
+    font-weight: 500;
+}
+
+.px-5.py-2.bg-blue-600.text-white.rounded-md.shadow-md.hover\:bg-blue-700.transition-colors { /* Save/Add button */
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.2);
+}
+
+.px-5.py-2.bg-blue-600.text-white.rounded-md.shadow-md.hover\:bg-blue-700.transition-colors:hover {
+    transform: translateY(-1px);
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+    .dashboard-cards-grid {
+        grid-template-columns: 1fr; /* Stack cards on small screens */
+    }
+    .quick-actions-grid {
+        grid-template-columns: 1fr;
+    }
+    .section-card {
+        padding: 1.5rem;
+    }
+    .main-title {
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+    }
+    .my-assignments-section .manage-button {
+        width: 100%;
+    }
+    .quick-action-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 640px) {
+    .assignment-dashboard-container {
+        padding: 1rem;
+    }
+    .flex.flex-col.sm\:flex-row.justify-between.items-center.mb-6.space-y-4.sm\:space-y-0 {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .relative.w-full.sm\:w-1\/3 {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    .px-6.py-2.bg-blue-600.text-white.rounded-full.shadow-lg {
+        width: 100%;
+        justify-content: center;
+    }
+    .min-w-full.table-auto.border-collapse {
+        min-width: unset;
+    }
+    .bg-white.p-8.rounded-lg.shadow-xl.w-full.max-w-md {
+        width: 95%;
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+}
