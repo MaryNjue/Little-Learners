@@ -28,15 +28,10 @@ class AuthController(private val userService: UserService) {
                 username = username,
                 email = email,
                 firebaseUid = firebaseUid,
-                role = UserRole.STUDENT // Default role for *new* users.
-                // For existing users, registerOrUpdateUser will use their existing role.
-                // If you need teachers to register/login via Firebase,
-                // their role must already be set in your DB, or set via custom claims
-                // in Firebase if you want to assign it at login.
-                // For now, new users default to STUDENT.
+                // Assign a default role or determine it based on your logic (e.g., claims in token)
+                role = UserRole.TEACHER // Or UserRole.STUDENT, or based on token claims
             )
 
-            // Return success response with internal user details
             ResponseEntity.ok(
                 AuthResponse(
                     userId = user.id,

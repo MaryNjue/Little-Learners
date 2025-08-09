@@ -3,13 +3,17 @@ package com.littlelearners.backend.dto
 import java.time.LocalDate
 import java.util.UUID
 
-// --- Assignment DTOs ---
-
 data class AssignmentRequest(
     val title: String,
     val description: String?,
     val dueDate: LocalDate?,
-    val teacherId: UUID // To link assignment to a teacher
+    val firebaseUid: String,
+    val subject: String,
+    val maxMarks: Int?,
+    val fileUrl: String?,
+    val automatedConfig: String?,
+    val assignedTo: String,
+    val assignedStudentIds: List<UUID>?
 )
 
 data class AssignmentResponse(
@@ -18,5 +22,11 @@ data class AssignmentResponse(
     val description: String?,
     val dueDate: LocalDate?,
     val teacherId: UUID,
-    val teacherUsername: String // Include teacher's username for display
+    val teacherUsername: String,
+    val subject: String,
+    val maxMarks: Int?,
+    val fileUrl: String?,
+    val assignedTo: String,
+    val assignedStudentIds: List<UUID>?
 )
+

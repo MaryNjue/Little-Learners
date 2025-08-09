@@ -10,7 +10,7 @@ import java.util.UUID
 @Service
 class StudentService(
     private val studentRepository: StudentRepository,
-    private val userRepository: UserRepository // Needed to link student to a teacher
+    private val userRepository: UserRepository
 ) {
     fun createStudent(
         fullName: String,
@@ -20,10 +20,10 @@ class StudentService(
         isActive: Boolean,
         parentName: String?,
         performanceScore: Int?,
-        teacherId: UUID
+        teacherFirebaseUid: String
     ): Student {
-        val teacher = userRepository.findById(teacherId)
-            .orElseThrow { EntityNotFoundException("Teacher with ID $teacherId not found") }
+        val teacher = userRepository.findByFirebaseUid(teacherFirebaseUid)
+            ?: throw EntityNotFoundException("Teacher with Firebase UID $teacherFirebaseUid not found")
 
         val student = Student(
             fullName = fullName,
@@ -58,10 +58,14 @@ class StudentService(
         gender: String,
         isActive: Boolean,
         parentName: String?,
-        performanceScore: Int?
+        performanceScore: Int?,
+        teacherFirebaseUid: String
     ): Student {
         val existingStudent = studentRepository.findById(id)
             .orElseThrow { EntityNotFoundException("Student with ID $id not found") }
+
+        val teacher = userRepository.findByFirebaseUid(teacherFirebaseUid)
+            ?: throw EntityNotFoundException("Teacher with Firebase UID $teacherFirebaseUid not found")
 
         existingStudent.fullName = fullName
         existingStudent.regNum = regNum
@@ -70,6 +74,7 @@ class StudentService(
         existingStudent.isActive = isActive
         existingStudent.parentName = parentName
         existingStudent.performanceScore = performanceScore
+        existingStudent.teacher = teacher
 
         return studentRepository.save(existingStudent)
     }

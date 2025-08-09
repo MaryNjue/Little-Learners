@@ -9,10 +9,10 @@ data class StudentRequest(
     val regNum: String,
     val grade: Int,
     val gender: String,
-    val isActive: Boolean = true, // Default to true for new students
+    val isActive: Boolean = true,
     val parentName: String?,
     val performanceScore: Int?,
-    val teacherId: UUID // To link student to a teacher
+    val teacherFirebaseUid: String // Changed from UUID to String
 )
 
 data class StudentResponse(

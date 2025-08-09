@@ -1,5 +1,6 @@
 package com.littlelearners.backend.controllers
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.littlelearners.backend.dto.AssignmentRequest
 import com.littlelearners.backend.dto.AssignmentResponse
 import com.littlelearners.backend.services.AssignmentService
@@ -14,104 +15,115 @@ import java.util.UUID
 @RequestMapping("/api/assignments")
 class AssignmentController(
     private val assignmentService: AssignmentService,
-    private val userService: UserService // To get teacher's username for response DTO
+    private val userService: UserService,
+    private val objectMapper: ObjectMapper
 ) {
 
-    @PostMapping // Create a new assignment
+    @PostMapping
     fun createAssignment(@RequestBody request: AssignmentRequest): ResponseEntity<Any> {
         return try {
+            val teacher = userService.findByFirebaseUid(request.firebaseUid)
+                ?: throw EntityNotFoundException("Teacher with Firebase UID ${request.firebaseUid} not found")
+
             val assignment = assignmentService.createAssignment(
                 title = request.title,
                 description = request.description,
                 dueDate = request.dueDate,
-                teacherId = request.teacherId
+                teacherId = teacher.id!!,
+                subject = request.subject,
+                maxMarks = request.maxMarks,
+                fileUrl = request.fileUrl,
+                automatedConfig = request.automatedConfig,
+                assignedTo = request.assignedTo,
+                assignedStudentIds = request.assignedStudentIds
             )
-            val teacherUsername = userService.findById(request.teacherId)?.username ?: "Unknown Teacher"
+
             val response = AssignmentResponse(
                 id = assignment.id!!,
                 title = assignment.title,
                 description = assignment.description,
                 dueDate = assignment.dueDate,
                 teacherId = assignment.teacher.id!!,
-                teacherUsername = teacherUsername
+                teacherUsername = teacher.username,
+                subject = assignment.subject,
+                maxMarks = assignment.maxMarks,
+                fileUrl = assignment.fileUrl,
+                assignedTo = assignment.assignedTo,
+                assignedStudentIds = request.assignedStudentIds
             )
             ResponseEntity.status(HttpStatus.CREATED).body(response)
         } catch (e: EntityNotFoundException) {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mapOf("message" to e.message))
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("message" to e.message))
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("message" to "Failed to create assignment: ${e.message}"))
         }
     }
 
-    @GetMapping // Get all assignments
-    fun getAllAssignments(): ResponseEntity<List<AssignmentResponse>> {
-        val assignments = assignmentService.getAllAssignments().map { assignment ->
-            val teacherUsername = userService.findById(assignment.teacher.id!!)?.username ?: "Unknown Teacher"
-            AssignmentResponse(
-                id = assignment.id!!,
-                title = assignment.title,
-                description = assignment.description,
-                dueDate = assignment.dueDate,
-                teacherId = assignment.teacher.id!!,
-                teacherUsername = teacherUsername
-            )
-        }
-        return ResponseEntity.ok(assignments)
-    }
+    @GetMapping("/teacher/{firebaseUid}")
+    fun getAssignmentsByTeacher(@PathVariable firebaseUid: String): ResponseEntity<Any> {
+        return try {
+            val teacher = userService.findByFirebaseUid(firebaseUid)
+                ?: throw EntityNotFoundException("Teacher with Firebase UID $firebaseUid not found")
 
-    @GetMapping("/{id}") // Get assignment by ID
-    fun getAssignmentById(@PathVariable id: UUID): ResponseEntity<Any> {
-        val assignment = assignmentService.getAssignmentById(id)
-        return if (assignment != null) {
-            val teacherUsername = userService.findById(assignment.teacher.id!!)?.username ?: "Unknown Teacher"
-            val response = AssignmentResponse(
-                id = assignment.id!!,
-                title = assignment.title,
-                description = assignment.description,
-                dueDate = assignment.dueDate,
-                teacherId = assignment.teacher.id!!,
-                teacherUsername = teacherUsername
-            )
-            ResponseEntity.ok(response)
-        } else {
-            ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("message" to "Assignment not found with ID: $id"))
+            val assignments = assignmentService.getAssignmentsByTeacherId(teacher.id!!)
+
+            val responses = assignments.map { assignment ->
+                AssignmentResponse(
+                    id = assignment.id!!,
+                    title = assignment.title,
+                    description = assignment.description,
+                    dueDate = assignment.dueDate,
+                    teacherId = assignment.teacher.id!!,
+                    teacherUsername = teacher.username,
+                    subject = assignment.subject,
+                    maxMarks = assignment.maxMarks,
+                    fileUrl = assignment.fileUrl,
+                    assignedTo = assignment.assignedTo,
+                    assignedStudentIds = assignment.assignedStudentIds?.let {
+                        objectMapper.readValue(it, Array<UUID>::class.java).toList()
+                    }
+                )
+            }
+            ResponseEntity.ok(responses)
+        } catch (e: EntityNotFoundException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("message" to e.message))
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("message" to "Failed to fetch assignments: ${e.message}"))
         }
     }
 
-    @GetMapping("/by-teacher/{teacherId}") // Get assignments by teacher ID
-    fun getAssignmentsByTeacherId(@PathVariable teacherId: UUID): ResponseEntity<List<AssignmentResponse>> {
-        val assignments = assignmentService.getAssignmentsByTeacherId(teacherId).map { assignment ->
-            val teacherUsername = userService.findById(assignment.teacher.id!!)?.username ?: "Unknown Teacher"
-            AssignmentResponse(
-                id = assignment.id!!,
-                title = assignment.title,
-                description = assignment.description,
-                dueDate = assignment.dueDate,
-                teacherId = assignment.teacher.id!!,
-                teacherUsername = teacherUsername
-            )
-        }
-        return ResponseEntity.ok(assignments)
-    }
-
-    @PutMapping("/{id}") // Update an existing assignment
+    @PutMapping("/{id}")
     fun updateAssignment(@PathVariable id: UUID, @RequestBody request: AssignmentRequest): ResponseEntity<Any> {
         return try {
+            val teacher = userService.findByFirebaseUid(request.firebaseUid)
+                ?: throw EntityNotFoundException("Teacher with Firebase UID ${request.firebaseUid} not found")
+
             val updatedAssignment = assignmentService.updateAssignment(
                 id = id,
                 title = request.title,
                 description = request.description,
                 dueDate = request.dueDate,
-                teacherId = request.teacherId // Still passed to ensure teacher existence validation
+                teacherId = teacher.id!!,
+                subject = request.subject,
+                maxMarks = request.maxMarks,
+                fileUrl = request.fileUrl,
+                automatedConfig = request.automatedConfig,
+                assignedTo = request.assignedTo,
+                assignedStudentIds = request.assignedStudentIds
             )
-            val teacherUsername = userService.findById(updatedAssignment.teacher.id!!)?.username ?: "Unknown Teacher"
+
             val response = AssignmentResponse(
                 id = updatedAssignment.id!!,
                 title = updatedAssignment.title,
                 description = updatedAssignment.description,
                 dueDate = updatedAssignment.dueDate,
                 teacherId = updatedAssignment.teacher.id!!,
-                teacherUsername = teacherUsername
+                teacherUsername = teacher.username,
+                subject = updatedAssignment.subject,
+                maxMarks = updatedAssignment.maxMarks,
+                fileUrl = updatedAssignment.fileUrl,
+                assignedTo = updatedAssignment.assignedTo,
+                assignedStudentIds = request.assignedStudentIds
             )
             ResponseEntity.ok(response)
         } catch (e: EntityNotFoundException) {
@@ -121,7 +133,7 @@ class AssignmentController(
         }
     }
 
-    @DeleteMapping("/{id}") // Delete an assignment
+    @DeleteMapping("/{id}")
     fun deleteAssignment(@PathVariable id: UUID): ResponseEntity<Any> {
         return try {
             assignmentService.deleteAssignment(id)

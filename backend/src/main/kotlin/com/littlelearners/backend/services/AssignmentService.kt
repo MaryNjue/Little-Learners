@@ -1,5 +1,6 @@
 package com.littlelearners.backend.services
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.littlelearners.backend.models.Assignment
 import com.littlelearners.backend.repositories.AssignmentRepository
 import com.littlelearners.backend.repositories.UserRepository
@@ -11,13 +12,20 @@ import java.util.UUID
 @Service
 class AssignmentService(
     private val assignmentRepository: AssignmentRepository,
-    private val userRepository: UserRepository // Needed to link assignment to a teacher
+    private val userRepository: UserRepository,
+    private val objectMapper: ObjectMapper
 ) {
     fun createAssignment(
         title: String,
         description: String?,
         dueDate: LocalDate?,
-        teacherId: UUID
+        teacherId: UUID,
+        subject: String,
+        maxMarks: Int?,
+        fileUrl: String?,
+        automatedConfig: String?,
+        assignedTo: String,
+        assignedStudentIds: List<UUID>?
     ): Assignment {
         val teacher = userRepository.findById(teacherId)
             .orElseThrow { EntityNotFoundException("Teacher with ID $teacherId not found") }
@@ -26,17 +34,15 @@ class AssignmentService(
             title = title,
             description = description,
             dueDate = dueDate,
-            teacher = teacher
+            teacher = teacher,
+            assignedStudentIds = assignedStudentIds?.let { objectMapper.writeValueAsString(it) },
+            assignedTo = assignedTo,
+            automatedConfig = automatedConfig,
+            fileUrl = fileUrl,
+            maxMarks = maxMarks,
+            subject = subject
         )
         return assignmentRepository.save(assignment)
-    }
-
-    fun getAllAssignments(): List<Assignment> {
-        return assignmentRepository.findAll()
-    }
-
-    fun getAssignmentById(id: UUID): Assignment? {
-        return assignmentRepository.findById(id).orElse(null)
     }
 
     fun getAssignmentsByTeacherId(teacherId: UUID): List<Assignment> {
@@ -48,20 +54,29 @@ class AssignmentService(
         title: String,
         description: String?,
         dueDate: LocalDate?,
-        teacherId: UUID // Even if not changing, ensure teacher still exists/is valid
+        teacherId: UUID,
+        subject: String,
+        maxMarks: Int?,
+        fileUrl: String?,
+        automatedConfig: String?,
+        assignedTo: String,
+        assignedStudentIds: List<UUID>?
     ): Assignment {
         val existingAssignment = assignmentRepository.findById(id)
             .orElseThrow { EntityNotFoundException("Assignment with ID $id not found") }
 
-        // Verify the teacher exists if it's being updated or just for validation
         userRepository.findById(teacherId)
             .orElseThrow { EntityNotFoundException("Teacher with ID $teacherId not found") }
 
         existingAssignment.title = title
         existingAssignment.description = description
         existingAssignment.dueDate = dueDate
-        // Note: If you want to allow changing the teacher of an assignment, you'd update existingAssignment.teacher here.
-        // For now, assuming teacher is set at creation or not changed directly via this update.
+        existingAssignment.assignedStudentIds = assignedStudentIds?.let { objectMapper.writeValueAsString(it) }
+        existingAssignment.assignedTo = assignedTo
+        existingAssignment.automatedConfig = automatedConfig
+        existingAssignment.fileUrl = fileUrl
+        existingAssignment.maxMarks = maxMarks
+        existingAssignment.subject = subject
 
         return assignmentRepository.save(existingAssignment)
     }

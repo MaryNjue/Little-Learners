@@ -1,165 +1,185 @@
-// src/Components/assignmentManager/AssignmentManager.js
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, X, ClipboardList, Files, Clock, CheckCircle } from 'lucide-react'; // Added more icons
-import '../../App.css'; // For general styles
-import '../assignmentManager/Assignment.css'; // Specific styles for AssignmentManager
+import { getAuth } from 'firebase/auth';
+import {
+  collection,
+  doc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot
+} from 'firebase/firestore';
+import { Plus, Edit, Trash2, Search, X, ClipboardList, Files, Clock, CheckCircle } from 'lucide-react';
+import '../../App.css';
+import '../assignmentManager/Assignment.css';
 
-function AssignmentManager({ loggedInTeacherId, loggedInTeacherUsername }) {
+// AssignmentManager component now accepts db and appId as props
+function AssignmentManager({ db, appId }) {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentAssignment, setCurrentAssignment] = useState(null); // For editing
+  const [currentAssignment, setCurrentAssignment] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showTableView, setShowTableView] = useState(false); // New state to toggle between dashboard and table view
+  const [showTableView, setShowTableView] = useState(false);
 
-  // UseEffect for simulating data fetch
+  // Form state, controlled components
+  const [formState, setFormState] = useState({
+    title: '',
+    description: '',
+    dueDate: '',
+    subject: '',
+    status: 'Draft',
+    maxMarks: '',
+    assignmentType: 'uploaded',
+    fileUrl: '',
+    automatedConfig: '',
+    assignedTo: 'all',
+    assignedStudentIds: '', // Stored as a comma-separated string for now
+  });
+
+  const auth = getAuth();
+  const userId = auth.currentUser?.uid;
+
+  // --- Firestore Data Functions ---
+
   useEffect(() => {
-    console.log("AssignmentManager: Starting data fetch simulation...");
-    setLoading(true);
-    setError(null);
+    if (!db || !appId || !userId) {
+      console.warn("Firestore, App ID, or User ID not available. Cannot fetch assignments.");
+      setLoading(false);
+      return;
+    }
 
-    setTimeout(() => {
-      try {
-        const dummyAssignments = [
-          {
-            id: 'a1',
-            title: 'Algebra Basics Worksheet',
-            subject: 'Mathematics',
-            dueDate: '2025-08-15',
-            status: 'Published',
-            maxMarks: 10,
-            description: 'Review of basic algebraic expressions and equations.',
-            assignedTo: 'All Students',
-            createdAt: '2025-07-20',
-            submitted: 8, // Dummy submission count
-            graded: 5,   // Dummy graded count
-          },
-          {
-            id: 'a2',
-            title: 'Essay: My Summer Vacation',
-            subject: 'English',
-            dueDate: '2025-08-20',
-            status: 'Draft',
-            maxMarks: 20,
-            description: 'Write a short essay about your summer vacation experiences.',
-            assignedTo: 'Grade 3 A',
-            createdAt: '2025-07-22',
-            submitted: 0,
-            graded: 0,
-          },
-          {
-            id: 'a3',
-            title: 'Science Experiment: Plant Growth',
-            subject: 'Science',
-            dueDate: '2025-08-25',
-            status: 'Published',
-            maxMarks: 15,
-            description: 'Observe and record the growth of a plant over two weeks.',
-            assignedTo: 'All Students',
-            createdAt: '2025-07-25',
-            submitted: 12,
-            graded: 10,
-          },
-          {
-            id: 'a4',
-            title: 'History Project: Ancient Civilizations',
-            subject: 'History',
-            dueDate: '2025-09-01',
-            status: 'Published',
-            maxMarks: 25,
-            description: 'Research and present on an ancient civilization of your choice.',
-            assignedTo: 'Grade 4',
-            createdAt: '2025-07-28',
-            submitted: 5,
-            graded: 2,
-          },
-        ];
-        setAssignments(dummyAssignments);
-        console.log("AssignmentManager: Data fetched successfully.");
-      } catch (err) {
-        console.error("AssignmentManager: Error during data simulation:", err);
-        setError("Failed to load assignments: " + err.message);
-      } finally {
-        setLoading(false);
-        console.log("AssignmentManager: Loading simulation finished.");
-      }
-    }, 1000); // Shorter simulation time for quicker testing
-  }, []);
+    const assignmentsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/assignments`);
 
-  // Calculate dashboard overview data
-  const totalAssignments = assignments.length;
-  const publishedAssignments = assignments.filter(a => a.status === 'Published').length;
-  const draftAssignments = assignments.filter(a => a.status === 'Draft').length;
-  const pendingSubmissions = assignments.reduce((sum, a) => {
-    // This is simplified. In a real app, you'd fetch actual submission counts
-    // and total students assigned to determine pending.
-    // For now, let's assume total students are 25 for demo purposes.
-    const totalAssignedStudents = 25; // Example
-    return sum + (totalAssignedStudents - (a.submitted || 0));
-  }, 0);
-  const assignmentsToGrade = assignments.reduce((sum, a) => sum + ((a.submitted || 0) - (a.graded || 0)), 0);
+    // Use onSnapshot for real-time updates
+    const unsubscribe = onSnapshot(assignmentsCollectionRef, (snapshot) => {
+      const fetchedAssignments = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setAssignments(fetchedAssignments);
+      setLoading(false);
+      console.log("Assignments fetched in real-time:", fetchedAssignments);
+    }, (err) => {
+      console.error("Error fetching assignments in real-time:", err);
+      setError("Failed to load assignments: " + err.message);
+      setLoading(false);
+    });
 
+    // Cleanup function to unsubscribe from the listener
+    return () => unsubscribe();
+  }, [db, appId, userId]);
 
-  const filteredAssignments = assignments.filter(assignment =>
-    assignment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    assignment.subject.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // --- Handlers for UI Actions ---
 
   const handleAddAssignment = () => {
     setCurrentAssignment(null);
+    setFormState({
+      title: '', description: '', dueDate: '', subject: '', status: 'Draft',
+      maxMarks: '', assignmentType: 'uploaded', fileUrl: '',
+      automatedConfig: '', assignedTo: 'all', assignedStudentIds: ''
+    });
     setIsModalOpen(true);
   };
 
   const handleEditAssignment = (assignment) => {
     setCurrentAssignment(assignment);
+    setFormState({
+      title: assignment.title || '',
+      description: assignment.description || '',
+      dueDate: assignment.dueDate || '',
+      subject: assignment.subject || '',
+      status: assignment.status || 'Draft',
+      maxMarks: assignment.maxMarks || '',
+      assignmentType: assignment.assignmentType || 'uploaded',
+      fileUrl: assignment.fileUrl || '',
+      automatedConfig: assignment.automatedConfig || '',
+      assignedTo: assignment.assignedTo || 'all',
+      // Convert the assignedStudentIds array back to a comma-separated string for the form
+      assignedStudentIds: Array.isArray(assignment.assignedStudentIds) ? assignment.assignedStudentIds.join(', ') : '',
+    });
     setIsModalOpen(true);
   };
 
-  const handleDeleteAssignment = (id) => {
+  const handleDeleteAssignment = async (id) => {
     if (window.confirm('Are you sure you want to delete this assignment?')) {
-      setAssignments(assignments.filter(assignment => assignment.id !== id));
-      console.log(`Assignment with ID ${id} deleted.`);
-      alert('Assignment deleted successfully!');
+      try {
+        const assignmentDocRef = doc(db, `artifacts/${appId}/users/${userId}/assignments`, id);
+        await deleteDoc(assignmentDocRef);
+        alert('Assignment deleted successfully!');
+        console.log(`Assignment with ID ${id} deleted.`);
+      } catch (err) {
+        console.error("Failed to delete assignment:", err);
+        setError("Failed to delete assignment: " + err.message);
+        alert('Failed to delete assignment: ' + err.message);
+      }
     }
   };
 
-  const handleSaveAssignment = (e) => {
+  const handleSaveAssignment = async (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const newAssignment = {
-      id: currentAssignment ? currentAssignment.id : Date.now().toString(),
-      title: formData.get('title'),
-      subject: formData.get('subject'),
-      dueDate: formData.get('dueDate'),
-      maxMarks: parseInt(formData.get('maxMarks')),
-      status: formData.get('status'),
-      description: formData.get('description'),
-      assignedTo: formData.get('assignedTo') || 'All Students',
-      createdAt: currentAssignment ? currentAssignment.createdAt : new Date().toISOString().split('T')[0],
-      submitted: currentAssignment ? currentAssignment.submitted : 0, // Preserve/initialize
-      graded: currentAssignment ? currentAssignment.graded : 0,     // Preserve/initialize
-    };
 
-    if (currentAssignment) {
-      setAssignments(assignments.map(assign =>
-        assign.id === newAssignment.id ? newAssignment : assign
-      ));
-      console.log('Assignment updated:', newAssignment);
-      alert('Assignment updated successfully!');
-    } else {
-      setAssignments([...assignments, newAssignment]);
-      console.log('New assignment added:', newAssignment);
-      alert('Assignment added successfully!');
+    if (!db || !appId || !userId) {
+      alert("Application not ready. Please try again.");
+      return;
     }
-    setIsModalOpen(false);
+
+    const assignmentData = {
+      ...formState,
+      teacherId: userId,
+      createdAt: new Date().toISOString(),
+      // Convert the assignedStudentIds string back to an array for Firestore
+      assignedStudentIds: formState.assignedTo === 'specific' ? formState.assignedStudentIds.split(',').map(id => id.trim()).filter(id => id) : null,
+      maxMarks: formState.maxMarks ? parseInt(formState.maxMarks, 10) : null,
+      automatedConfig: formState.automatedConfig || null,
+      fileUrl: formState.fileUrl || null,
+    };
+    
+    // Remove the temporary string field before saving to Firestore
+    delete assignmentData.assignedStudentIdsString;
+
+    console.log("Saving assignment data to Firestore:", assignmentData);
+
+    try {
+      if (currentAssignment) {
+        // Update existing assignment
+        const assignmentDocRef = doc(db, `artifacts/${appId}/users/${userId}/assignments`, currentAssignment.id);
+        await updateDoc(assignmentDocRef, assignmentData);
+      } else {
+        // Create new assignment
+        const assignmentsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/assignments`);
+        await addDoc(assignmentsCollectionRef, assignmentData);
+      }
+
+      alert(`Assignment ${currentAssignment ? 'updated' : 'added'} successfully!`);
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error("Failed to save assignment:", err);
+      setError("Failed to save assignment: " + err.message);
+      alert('Failed to save assignment: ' + err.message);
+    }
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setCurrentAssignment(null);
   };
+
+  // Simplified Dashboard calculation
+  const totalAssignments = assignments.length;
+  const publishedAssignments = assignments.filter(a => a.status === 'Published').length;
+  const draftAssignments = assignments.filter(a => a.status === 'Draft').length;
+  // These will be 0 for now as the data isn't in this collection
+  const assignmentsToGrade = 0;
+  const pendingSubmissions = 0;
+
+  const filteredAssignments = assignments.filter(assignment =>
+    assignment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    assignment.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    assignment.status.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -177,14 +197,12 @@ function AssignmentManager({ loggedInTeacherId, loggedInTeacherUsername }) {
     );
   }
 
-  // Render the dashboard view or the table view based on showTableView state
   return (
     <div className="assignment-dashboard-container">
       <h2 className="main-title">
         <ClipboardList className="main-title-icon" /> Assignment Overview
       </h2>
 
-      {/* Conditional rendering for either Dashboard or Table */}
       {!showTableView ? (
         <>
           {/* Overview Cards */}
@@ -254,10 +272,10 @@ function AssignmentManager({ loggedInTeacherId, loggedInTeacherUsername }) {
           <div className="section-card recent-activity-section">
             <h3 className="section-title">Recent Assignment Activity</h3>
             <ul className="activity-list">
-              <li>"Algebra Basics Worksheet" was published.</li>
-              <li>"Science Experiment" received 5 new submissions.</li>
-              <li>"Essay: My Summer Vacation" is still in draft mode.</li>
-              <li>3 assignments were graded today.</li>
+              {assignments.slice(0, 3).map(assign => (
+                <li key={assign.id}>"{assign.title}" was {assign.status === 'Published' ? 'published' : 'drafted'}.</li>
+              ))}
+              {assignments.length === 0 && <li>No recent activity. Create an assignment to see updates!</li>}
             </ul>
           </div>
         </>
@@ -303,6 +321,9 @@ function AssignmentManager({ loggedInTeacherId, loggedInTeacherUsername }) {
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Due Date</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Max Marks</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Assigned To</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Created At</th>
                     <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
@@ -320,6 +341,13 @@ function AssignmentManager({ loggedInTeacherId, loggedInTeacherUsername }) {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{assignment.maxMarks}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {assignment.assignedTo === 'all' ? 'All Students' : 'Specific Students'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{assignment.assignmentType}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                         {assignment.createdAt ? new Date(assignment.createdAt).toLocaleDateString() : 'N/A'}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                         <button
                           onClick={() => handleEditAssignment(assignment)}
@@ -347,7 +375,7 @@ function AssignmentManager({ loggedInTeacherId, loggedInTeacherUsername }) {
         </div>
       )}
 
-      {/* Add/Edit Assignment Modal (remains the same) */}
+      {/* Add/Edit Assignment Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center p-4 z-50">
           <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
@@ -366,7 +394,8 @@ function AssignmentManager({ loggedInTeacherId, loggedInTeacherUsername }) {
                   type="text"
                   id="title"
                   name="title"
-                  defaultValue={currentAssignment?.title || ''}
+                  value={formState.title}
+                  onChange={(e) => setFormState({ ...formState, title: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
@@ -377,7 +406,8 @@ function AssignmentManager({ loggedInTeacherId, loggedInTeacherUsername }) {
                   type="text"
                   id="subject"
                   name="subject"
-                  defaultValue={currentAssignment?.subject || ''}
+                  value={formState.subject}
+                  onChange={(e) => setFormState({ ...formState, subject: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
@@ -388,7 +418,8 @@ function AssignmentManager({ loggedInTeacherId, loggedInTeacherUsername }) {
                   type="date"
                   id="dueDate"
                   name="dueDate"
-                  defaultValue={currentAssignment?.dueDate || ''}
+                  value={formState.dueDate}
+                  onChange={(e) => setFormState({ ...formState, dueDate: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
@@ -399,7 +430,8 @@ function AssignmentManager({ loggedInTeacherId, loggedInTeacherUsername }) {
                   type="number"
                   id="maxMarks"
                   name="maxMarks"
-                  defaultValue={currentAssignment?.maxMarks || ''}
+                  value={formState.maxMarks}
+                  onChange={(e) => setFormState({ ...formState, maxMarks: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
@@ -409,7 +441,8 @@ function AssignmentManager({ loggedInTeacherId, loggedInTeacherUsername }) {
                 <select
                   id="status"
                   name="status"
-                  defaultValue={currentAssignment?.status || 'Draft'}
+                  value={formState.status}
+                  onChange={(e) => setFormState({ ...formState, status: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 >
@@ -417,12 +450,96 @@ function AssignmentManager({ loggedInTeacherId, loggedInTeacherUsername }) {
                   <option value="Published">Published</option>
                 </select>
               </div>
+
+              {/* New fields for Assignment */}
+              <div>
+                <label htmlFor="assignmentType" className="block text-sm font-medium text-gray-700">Assignment Type</label>
+                <select
+                  id="assignmentType"
+                  name="assignmentType"
+                  value={formState.assignmentType}
+                  onChange={(e) => setFormState({ ...formState, assignmentType: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="uploaded">Uploaded File</option>
+                  <option value="quiz">Quiz</option>
+                  <option value="text">Text Entry</option>
+                </select>
+              </div>
+
+              {formState.assignmentType === 'uploaded' && (
+                <div>
+                  <label htmlFor="fileUrl" className="block text-sm font-medium text-gray-700">File URL (Optional)</label>
+                  <input
+                    type="url"
+                    id="fileUrl"
+                    name="fileUrl"
+                    value={formState.fileUrl}
+                    onChange={(e) => setFormState({ ...formState, fileUrl: e.target.value })}
+                    placeholder="e.g., https://example.com/assignment.pdf"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              )}
+
+              {formState.assignmentType === 'quiz' && (
+                <div>
+                  <label htmlFor="automatedConfig" className="block text-sm font-medium text-gray-700">Automated Quiz Config (JSON)</label>
+                  <textarea
+                    id="automatedConfig"
+                    name="automatedConfig"
+                    value={formState.automatedConfig}
+                    onChange={(e) => setFormState({ ...formState, automatedConfig: e.target.value })}
+                    rows="3"
+                    placeholder='{"questions": [{"q": "What is 2+2?", "a": "4"}]}'
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                  ></textarea>
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700">Assign To</label>
+                <select
+                  id="assignedTo"
+                  name="assignedTo"
+                  value={formState.assignedTo}
+                  onChange={(e) => setFormState({ ...formState, assignedTo: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="all">All Students</option>
+                  <option value="specific">Specific Students</option>
+                </select>
+              </div>
+
+              {formState.assignedTo === 'specific' && (
+                <div>
+                  <label htmlFor="assignedStudentIds" className="block text-sm font-medium text-gray-700">
+                    Assigned Student IDs (Comma-separated UUIDs for now)
+                  </label>
+                  <input
+                    type="text"
+                    id="assignedStudentIds"
+                    name="assignedStudentIds"
+                    value={formState.assignedStudentIds}
+                    onChange={(e) => setFormState({ ...formState, assignedStudentIds: e.target.value })}
+                    placeholder="e.g., uuid1, uuid2, uuid3"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                      Note: In a full implementation, this would be a multi-select dropdown populated from your student list.
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description (Optional)</label>
                 <textarea
                   id="description"
                   name="description"
-                  defaultValue={currentAssignment?.description || ''}
+                  value={formState.description}
+                  onChange={(e) => setFormState({ ...formState, description: e.target.value })}
                   rows="3"
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
                 ></textarea>
@@ -451,7 +568,7 @@ function AssignmentManager({ loggedInTeacherId, loggedInTeacherUsername }) {
   );
 }
 
-// Reusable Dashboard Card Component for Assignment Overview
+// Reusable Dashboard Card Component
 function DashboardCard({ title, value, icon, bgColorClass, textColorClass }) {
   return (
     <div className={`dashboard-card ${bgColorClass} ${textColorClass}`}>
