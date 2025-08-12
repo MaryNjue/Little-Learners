@@ -32,6 +32,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.flywaydb:flyway-core:11.10.5")
 	implementation("com.google.firebase:firebase-admin:9.2.0")
+	
 }
 
 kotlin {

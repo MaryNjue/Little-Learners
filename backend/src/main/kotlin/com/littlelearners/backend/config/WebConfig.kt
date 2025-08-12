@@ -9,7 +9,7 @@ class WebConfig : WebMvcConfigurer {
 
     override fun addCorsMappings(registry: CorsRegistry) {
         registry.addMapping("/**") // Apply CORS to all endpoints in your API
-            .allowedOrigins("http://localhost:3000") // Allow requests from your React app's origin
+            .allowedOrigins("http://localhost:3000",  "https://little-learners-three.vercel.app", "https://little-learners-three.vercel.app/#") // Allow requests from your React app's origin
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Allow common HTTP methods
             .allowedHeaders("*") // Allow all headers
             .allowCredentials(true) // Allow credentials (like cookies, authorization headers)

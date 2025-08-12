@@ -3,7 +3,6 @@ import { getAuth } from 'firebase/auth';
 import {
   collection,
   doc,
-  getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -11,21 +10,36 @@ import {
 } from 'firebase/firestore';
 import { Plus, Edit, Trash2, Search, X, ClipboardList, Files, Clock, CheckCircle } from 'lucide-react';
 import '../../App.css';
-import '../assignmentManager/Assignment.css';
+import '../assignmentManager/Assignment.css'; // Make sure this is correctly imported
 
-// AssignmentManager component now accepts db and appId as props
-function AssignmentManager({ db, appId }) {
-  const [assignments, setAssignments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+// Reusable CustomConfirmModal component for deleting items
+const CustomConfirmModal = ({ message, onConfirm, onCancel }) => {
+  return (
+    <div className="confirm-modal-overlay">
+      <div className="confirm-modal-content">
+        <p className="confirm-modal-text">{message}</p>
+        <div className="confirm-modal-actions">
+          <button
+            onClick={onCancel}
+            className="confirm-cancel-button"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="confirm-button"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentAssignment, setCurrentAssignment] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showTableView, setShowTableView] = useState(false);
-
-  // Form state, controlled components
-  const [formState, setFormState] = useState({
+// Assignment Form Modal Component
+const AssignmentFormModal = ({ isOpen, onClose, onSave, initialAssignment, db, appId, userId }) => {
+  const [formState, setFormState] = useState(initialAssignment || {
     title: '',
     description: '',
     dueDate: '',
@@ -36,13 +50,256 @@ function AssignmentManager({ db, appId }) {
     fileUrl: '',
     automatedConfig: '',
     assignedTo: 'all',
-    assignedStudentIds: '', // Stored as a comma-separated string for now
+    assignedStudentIds: '',
   });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormState(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!db || !appId || !userId) {
+      console.error("Application not ready. Please try again.");
+      return;
+    }
+
+    const assignmentData = {
+      ...formState,
+      teacherId: userId,
+      createdAt: initialAssignment ? initialAssignment.createdAt : new Date().toISOString(),
+      assignedStudentIds: formState.assignedTo === 'specific' ? formState.assignedStudentIds.split(',').map(id => id.trim()).filter(id => id) : null,
+      maxMarks: formState.maxMarks ? parseInt(formState.maxMarks, 10) : null,
+      automatedConfig: formState.automatedConfig || null,
+      fileUrl: formState.fileUrl || null,
+    };
+
+    try {
+      if (initialAssignment) {
+        // Update existing assignment
+        const assignmentDocRef = doc(db, `artifacts/${appId}/users/${userId}/assignments`, initialAssignment.id);
+        await updateDoc(assignmentDocRef, assignmentData);
+        console.log(`Assignment with ID ${initialAssignment.id} updated successfully.`);
+      } else {
+        // Create new assignment
+        const assignmentsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/assignments`);
+        await addDoc(assignmentsCollectionRef, assignmentData);
+        console.log('New assignment added successfully!');
+      }
+      onSave(); // Close the modal and potentially refresh data
+    } catch (err) {
+      console.error("Failed to save assignment:", err);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h3 className="modal-title">
+            {initialAssignment ? 'Edit Assignment' : 'Add New Assignment'}
+          </h3>
+          <button onClick={onClose} className="modal-close-button">
+            <X size={24} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="form-container">
+          <div className="form-field">
+            <label htmlFor="title" className="form-label">Assignment Title</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={formState.title}
+              onChange={handleInputChange}
+              className="form-input"
+              required
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="subject" className="form-label">Subject</label>
+            <input
+              type="text"
+              id="subject"
+              name="subject"
+              value={formState.subject}
+              onChange={handleInputChange}
+              className="form-input"
+              required
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="dueDate" className="form-label">Due Date</label>
+            <input
+              type="date"
+              id="dueDate"
+              name="dueDate"
+              value={formState.dueDate}
+              onChange={handleInputChange}
+              className="form-input"
+              required
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="maxMarks" className="form-label">Max Marks</label>
+            <input
+              type="number"
+              id="maxMarks"
+              name="maxMarks"
+              value={formState.maxMarks}
+              onChange={handleInputChange}
+              className="form-input"
+              required
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="status" className="form-label">Status</label>
+            <select
+              id="status"
+              name="status"
+              value={formState.status}
+              onChange={handleInputChange}
+              className="form-select"
+              required
+            >
+              <option value="Draft">Draft</option>
+              <option value="Published">Published</option>
+            </select>
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="assignmentType" className="form-label">Assignment Type</label>
+            <select
+              id="assignmentType"
+              name="assignmentType"
+              value={formState.assignmentType}
+              onChange={handleInputChange}
+              className="form-select"
+              required
+            >
+              <option value="uploaded">Uploaded File</option>
+              <option value="quiz">Quiz</option>
+              <option value="text">Text Entry</option>
+            </select>
+          </div>
+
+          {formState.assignmentType === 'uploaded' && (
+            <div className="form-field">
+              <label htmlFor="fileUrl" className="form-label">File URL (Optional)</label>
+              <input
+                type="url"
+                id="fileUrl"
+                name="fileUrl"
+                value={formState.fileUrl}
+                onChange={handleInputChange}
+                placeholder="e.g., https://example.com/assignment.pdf"
+                className="form-input"
+              />
+            </div>
+          )}
+
+          {formState.assignmentType === 'quiz' && (
+            <div className="form-field">
+              <label htmlFor="automatedConfig" className="form-label">Automated Quiz Config (JSON)</label>
+              <textarea
+                id="automatedConfig"
+                name="automatedConfig"
+                value={formState.automatedConfig}
+                onChange={handleInputChange}
+                rows="3"
+                placeholder='{"questions": [{"q": "What is 2+2?", "a": "4"}]}'
+                className="form-textarea"
+              ></textarea>
+            </div>
+          )}
+
+          <div className="form-field">
+            <label htmlFor="assignedTo" className="form-label">Assign To</label>
+            <select
+              id="assignedTo"
+              name="assignedTo"
+              value={formState.assignedTo}
+              onChange={handleInputChange}
+              className="form-select"
+              required
+            >
+              <option value="all">All Students</option>
+              <option value="specific">Specific Students</option>
+            </select>
+          </div>
+
+          {formState.assignedTo === 'specific' && (
+            <div className="form-field">
+              <label htmlFor="assignedStudentIds" className="form-label">
+                Assigned Student IDs (Comma-separated UUIDs for now)
+              </label>
+              <input
+                type="text"
+                id="assignedStudentIds"
+                name="assignedStudentIds"
+                value={formState.assignedStudentIds}
+                onChange={handleInputChange}
+                placeholder="e.g., uuid1, uuid2, uuid3"
+                className="form-input"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                  Note: In a full implementation, this would be a multi-select dropdown populated from your student list.
+              </p>
+            </div>
+          )}
+
+          <div className="form-field">
+            <label htmlFor="description" className="form-label">Description (Optional)</label>
+            <textarea
+              id="description"
+              name="description"
+              value={formState.description}
+              onChange={handleInputChange}
+              rows="3"
+              className="form-textarea"
+            ></textarea>
+          </div>
+
+          <div className="form-actions">
+            <button
+              type="button"
+              onClick={onClose}
+              className="cancel-button"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="submit-button"
+            >
+              {initialAssignment ? 'Update Assignment' : 'Add Assignment'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Main AssignmentManager component
+function AssignmentManager({ db, appId }) {
+  const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [currentAssignment, setCurrentAssignment] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showTableView, setShowTableView] = useState(false);
+
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [assignmentToDelete, setAssignmentToDelete] = useState(null);
 
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
-
-  // --- Firestore Data Functions ---
 
   useEffect(() => {
     if (!db || !appId || !userId) {
@@ -52,8 +309,6 @@ function AssignmentManager({ db, appId }) {
     }
 
     const assignmentsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/assignments`);
-
-    // Use onSnapshot for real-time updates
     const unsubscribe = onSnapshot(assignmentsCollectionRef, (snapshot) => {
       const fetchedAssignments = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -61,119 +316,60 @@ function AssignmentManager({ db, appId }) {
       }));
       setAssignments(fetchedAssignments);
       setLoading(false);
-      console.log("Assignments fetched in real-time:", fetchedAssignments);
     }, (err) => {
       console.error("Error fetching assignments in real-time:", err);
       setError("Failed to load assignments: " + err.message);
       setLoading(false);
     });
 
-    // Cleanup function to unsubscribe from the listener
     return () => unsubscribe();
   }, [db, appId, userId]);
 
-  // --- Handlers for UI Actions ---
-
   const handleAddAssignment = () => {
     setCurrentAssignment(null);
-    setFormState({
-      title: '', description: '', dueDate: '', subject: '', status: 'Draft',
-      maxMarks: '', assignmentType: 'uploaded', fileUrl: '',
-      automatedConfig: '', assignedTo: 'all', assignedStudentIds: ''
-    });
-    setIsModalOpen(true);
+    setIsFormModalOpen(true);
   };
 
   const handleEditAssignment = (assignment) => {
     setCurrentAssignment(assignment);
-    setFormState({
-      title: assignment.title || '',
-      description: assignment.description || '',
-      dueDate: assignment.dueDate || '',
-      subject: assignment.subject || '',
-      status: assignment.status || 'Draft',
-      maxMarks: assignment.maxMarks || '',
-      assignmentType: assignment.assignmentType || 'uploaded',
-      fileUrl: assignment.fileUrl || '',
-      automatedConfig: assignment.automatedConfig || '',
-      assignedTo: assignment.assignedTo || 'all',
-      // Convert the assignedStudentIds array back to a comma-separated string for the form
-      assignedStudentIds: Array.isArray(assignment.assignedStudentIds) ? assignment.assignedStudentIds.join(', ') : '',
-    });
-    setIsModalOpen(true);
+    setIsFormModalOpen(true);
   };
 
-  const handleDeleteAssignment = async (id) => {
-    if (window.confirm('Are you sure you want to delete this assignment?')) {
-      try {
-        const assignmentDocRef = doc(db, `artifacts/${appId}/users/${userId}/assignments`, id);
-        await deleteDoc(assignmentDocRef);
-        alert('Assignment deleted successfully!');
-        console.log(`Assignment with ID ${id} deleted.`);
-      } catch (err) {
-        console.error("Failed to delete assignment:", err);
-        setError("Failed to delete assignment: " + err.message);
-        alert('Failed to delete assignment: ' + err.message);
-      }
-    }
-  };
-
-  const handleSaveAssignment = async (e) => {
-    e.preventDefault();
-
-    if (!db || !appId || !userId) {
-      alert("Application not ready. Please try again.");
-      return;
-    }
-
-    const assignmentData = {
-      ...formState,
-      teacherId: userId,
-      createdAt: new Date().toISOString(),
-      // Convert the assignedStudentIds string back to an array for Firestore
-      assignedStudentIds: formState.assignedTo === 'specific' ? formState.assignedStudentIds.split(',').map(id => id.trim()).filter(id => id) : null,
-      maxMarks: formState.maxMarks ? parseInt(formState.maxMarks, 10) : null,
-      automatedConfig: formState.automatedConfig || null,
-      fileUrl: formState.fileUrl || null,
-    };
-    
-    // Remove the temporary string field before saving to Firestore
-    delete assignmentData.assignedStudentIdsString;
-
-    console.log("Saving assignment data to Firestore:", assignmentData);
-
-    try {
-      if (currentAssignment) {
-        // Update existing assignment
-        const assignmentDocRef = doc(db, `artifacts/${appId}/users/${userId}/assignments`, currentAssignment.id);
-        await updateDoc(assignmentDocRef, assignmentData);
-      } else {
-        // Create new assignment
-        const assignmentsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/assignments`);
-        await addDoc(assignmentsCollectionRef, assignmentData);
-      }
-
-      alert(`Assignment ${currentAssignment ? 'updated' : 'added'} successfully!`);
-      setIsModalOpen(false);
-    } catch (err) {
-      console.error("Failed to save assignment:", err);
-      setError("Failed to save assignment: " + err.message);
-      alert('Failed to save assignment: ' + err.message);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleCloseFormModal = () => {
+    setIsFormModalOpen(false);
     setCurrentAssignment(null);
   };
 
-  // Simplified Dashboard calculation
+  const handleOpenConfirmModal = (assignmentId) => {
+    setAssignmentToDelete(assignmentId);
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsConfirmModalOpen(false);
+    if (!assignmentToDelete) return;
+
+    try {
+      const assignmentDocRef = doc(db, `artifacts/${appId}/users/${userId}/assignments`, assignmentToDelete);
+      await deleteDoc(assignmentDocRef);
+      console.log('Assignment deleted successfully!');
+    } catch (err) {
+      console.error("Failed to delete assignment:", err);
+      setError("Failed to delete assignment: " + err.message);
+    } finally {
+      setAssignmentToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsConfirmModalOpen(false);
+    setAssignmentToDelete(null);
+  };
+
   const totalAssignments = assignments.length;
   const publishedAssignments = assignments.filter(a => a.status === 'Published').length;
   const draftAssignments = assignments.filter(a => a.status === 'Draft').length;
-  // These will be 0 for now as the data isn't in this collection
   const assignmentsToGrade = 0;
-  const pendingSubmissions = 0;
 
   const filteredAssignments = assignments.filter(assignment =>
     assignment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -205,7 +401,6 @@ function AssignmentManager({ db, appId }) {
 
       {!showTableView ? (
         <>
-          {/* Overview Cards */}
           <div className="dashboard-cards-grid">
             <DashboardCard
               title="Total Assignments"
@@ -237,7 +432,6 @@ function AssignmentManager({ db, appId }) {
             />
           </div>
 
-          {/* My Assignments / Manage Section */}
           <div className="section-card my-assignments-section">
             <h3 className="section-title">My Assignments</h3>
             <p className="section-description">View, manage, and track all your assignments.</p>
@@ -249,26 +443,24 @@ function AssignmentManager({ db, appId }) {
             </button>
           </div>
 
-          {/* Quick Actions */}
           <div className="section-card quick-actions-section">
             <h3 className="section-title">Quick Actions</h3>
             <div className="quick-actions-grid">
               <button className="quick-action-button" onClick={handleAddAssignment}>
                 <Plus className="icon" /> Create New Assignment
               </button>
-              <button className="quick-action-button" onClick={() => alert('Feature: Upload Assignment File (e.g., PDF, Doc)')}>
+              <button className="quick-action-button" onClick={() => console.log('Feature: Upload Assignment File (e.g., PDF, Doc)')}>
                 <Files className="icon" /> Upload Assignment
               </button>
-              <button className="quick-action-button" onClick={() => alert('Feature: Grade Submitted Work')}>
+              <button className="quick-action-button" onClick={() => console.log('Feature: Grade Submitted Work')}>
                 <CheckCircle className="icon" /> Grade Work
               </button>
-              <button className="quick-action-button" onClick={() => alert('Feature: View Assignment Submissions')}>
+              <button className="quick-action-button" onClick={() => console.log('Feature: View Assignment Submissions')}>
                 <ClipboardList className="icon" /> View Submissions
               </button>
             </div>
           </div>
 
-          {/* Recent Activity (Placeholder) */}
           <div className="section-card recent-activity-section">
             <h3 className="section-title">Recent Assignment Activity</h3>
             <ul className="activity-list">
@@ -280,7 +472,6 @@ function AssignmentManager({ db, appId }) {
           </div>
         </>
       ) : (
-        // Render the detailed assignment table when showTableView is true
         <div className="detailed-assignment-table">
           <div className="flex justify-between items-center mb-6">
              <h3 className="text-2xl font-bold text-gray-800">All Assignments</h3>
@@ -335,7 +526,7 @@ function AssignmentManager({ db, appId }) {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{assignment.dueDate}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          assignment.status === 'Published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                          assignment.status === 'Published' ? 'status-Published' : 'status-Draft'
                         }`}>
                           {assignment.status}
                         </span>
@@ -357,7 +548,7 @@ function AssignmentManager({ db, appId }) {
                           <Edit size={18} />
                         </button>
                         <button
-                          onClick={() => handleDeleteAssignment(assignment.id)}
+                          onClick={() => handleOpenConfirmModal(assignment.id)}
                           className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100 transition-colors"
                           title="Delete Assignment"
                         >
@@ -375,194 +566,23 @@ function AssignmentManager({ db, appId }) {
         </div>
       )}
 
-      {/* Add/Edit Assignment Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center p-4 z-50">
-          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-800">
-                {currentAssignment ? 'Edit Assignment' : 'Add New Assignment'}
-              </h3>
-              <button onClick={handleCloseModal} className="text-gray-500 hover:text-gray-700">
-                <X size={24} />
-              </button>
-            </div>
-            <form onSubmit={handleSaveAssignment} className="space-y-4">
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700">Assignment Title</label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formState.title}
-                  onChange={(e) => setFormState({ ...formState, title: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-700">Subject</label>
-                <input
-                  type="text"
-                  id="subject"
-                  name="subject"
-                  value={formState.subject}
-                  onChange={(e) => setFormState({ ...formState, subject: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">Due Date</label>
-                <input
-                  type="date"
-                  id="dueDate"
-                  name="dueDate"
-                  value={formState.dueDate}
-                  onChange={(e) => setFormState({ ...formState, dueDate: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="maxMarks" className="block text-sm font-medium text-gray-700">Max Marks</label>
-                <input
-                  type="number"
-                  id="maxMarks"
-                  name="maxMarks"
-                  value={formState.maxMarks}
-                  onChange={(e) => setFormState({ ...formState, maxMarks: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formState.status}
-                  onChange={(e) => setFormState({ ...formState, status: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                >
-                  <option value="Draft">Draft</option>
-                  <option value="Published">Published</option>
-                </select>
-              </div>
+      {/* The pop-up modal is rendered here, conditionally based on state */}
+      <AssignmentFormModal
+        isOpen={isFormModalOpen}
+        onClose={handleCloseFormModal}
+        onSave={handleCloseFormModal}
+        initialAssignment={currentAssignment}
+        db={db}
+        appId={appId}
+        userId={userId}
+      />
 
-              {/* New fields for Assignment */}
-              <div>
-                <label htmlFor="assignmentType" className="block text-sm font-medium text-gray-700">Assignment Type</label>
-                <select
-                  id="assignmentType"
-                  name="assignmentType"
-                  value={formState.assignmentType}
-                  onChange={(e) => setFormState({ ...formState, assignmentType: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                >
-                  <option value="uploaded">Uploaded File</option>
-                  <option value="quiz">Quiz</option>
-                  <option value="text">Text Entry</option>
-                </select>
-              </div>
-
-              {formState.assignmentType === 'uploaded' && (
-                <div>
-                  <label htmlFor="fileUrl" className="block text-sm font-medium text-gray-700">File URL (Optional)</label>
-                  <input
-                    type="url"
-                    id="fileUrl"
-                    name="fileUrl"
-                    value={formState.fileUrl}
-                    onChange={(e) => setFormState({ ...formState, fileUrl: e.target.value })}
-                    placeholder="e.g., https://example.com/assignment.pdf"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              )}
-
-              {formState.assignmentType === 'quiz' && (
-                <div>
-                  <label htmlFor="automatedConfig" className="block text-sm font-medium text-gray-700">Automated Quiz Config (JSON)</label>
-                  <textarea
-                    id="automatedConfig"
-                    name="automatedConfig"
-                    value={formState.automatedConfig}
-                    onChange={(e) => setFormState({ ...formState, automatedConfig: e.target.value })}
-                    rows="3"
-                    placeholder='{"questions": [{"q": "What is 2+2?", "a": "4"}]}'
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                  ></textarea>
-                </div>
-              )}
-
-              <div>
-                <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700">Assign To</label>
-                <select
-                  id="assignedTo"
-                  name="assignedTo"
-                  value={formState.assignedTo}
-                  onChange={(e) => setFormState({ ...formState, assignedTo: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                >
-                  <option value="all">All Students</option>
-                  <option value="specific">Specific Students</option>
-                </select>
-              </div>
-
-              {formState.assignedTo === 'specific' && (
-                <div>
-                  <label htmlFor="assignedStudentIds" className="block text-sm font-medium text-gray-700">
-                    Assigned Student IDs (Comma-separated UUIDs for now)
-                  </label>
-                  <input
-                    type="text"
-                    id="assignedStudentIds"
-                    name="assignedStudentIds"
-                    value={formState.assignedStudentIds}
-                    onChange={(e) => setFormState({ ...formState, assignedStudentIds: e.target.value })}
-                    placeholder="e.g., uuid1, uuid2, uuid3"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">
-                      Note: In a full implementation, this would be a multi-select dropdown populated from your student list.
-                  </p>
-                </div>
-              )}
-
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description (Optional)</label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formState.description}
-                  onChange={(e) => setFormState({ ...formState, description: e.target.value })}
-                  rows="3"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                ></textarea>
-              </div>
-
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-5 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 transition-colors"
-                >
-                  {currentAssignment ? 'Update Assignment' : 'Add Assignment'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {isConfirmModalOpen && (
+        <CustomConfirmModal
+          message="Are you sure you want to delete this assignment?"
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
       )}
     </div>
   );

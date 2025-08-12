@@ -211,224 +211,281 @@
     padding: 0.6rem 1.2rem;
     border-radius: 0.5rem;
     font-size: 0.9rem;
-    font-weight: 500;
-    display: flex;
+    font-weight: 600;
+    display: inline-flex;
     align-items: center;
     border: none;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease-in-out;
 }
 
 .back-to-dashboard-button:hover {
     background-color: #c0392b;
 }
 
-
-/* --- Existing Table Styles (adjusted to fit new context) --- */
-.flex.flex-col.sm\:flex-row.justify-between.items-center.mb-6.space-y-4.sm\:space-y-0 {
-    margin-top: 1.5rem; /* Space below the "All Assignments" title */
+.student-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
 }
 
-.relative.w-full.sm\:w-1\/3 { /* Search input wrapper */
-    /* Adjust width if needed for better fit in the toggled view */
-    max-width: 300px; /* Example */
+.student-table th,
+.student-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
 }
 
-.pl-10.pr-4.py-2.border.rounded-full.w-full.focus\:outline-none.focus\:ring-2.focus\:ring-blue-500 { /* Search input */
-    box-shadow: none; /* Remove extra shadow */
-    border-color: #dde1e6;
-}
-
-.px-6.py-2.bg-blue-600.text-white.rounded-full.shadow-lg.hover\:bg-blue-700.transition-colors.flex.items-center { /* Add New Assignment button */
-    /* Utility classes provide most of the styling. Adding specific hover/transition effects. */
-    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
-}
-
-
-.overflow-x-auto.bg-white.rounded-lg.shadow { /* Table container */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); /* Stronger shadow for the table block */
-}
-
-.min-w-full.table-auto.border-collapse { /* Table itself */
-    min-width: 800px; /* Ensure table doesn't collapse too much on small screens */
-}
-
-.bg-gray-100.border-b.border-gray-200 { /* Table header */
-    /* Already styled well with utility classes */
-}
-
-.px-6.py-3.text-left.text-xs.font-semibold.text-gray-600.uppercase.tracking-wider { /* Table header cells */
+.student-table th {
+    background-color: #f2f2f2;
+    font-weight: 600;
     color: #555;
-    letter-spacing: 0.05em;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-}
-
-.divide-y.divide-gray-200 { /* Table body */
-    /* Utility class for row dividers */
-}
-
-.hover\:bg-gray-50.transition-colors { /* Table rows on hover */
-    /* Utility classes provide good hover effect */
-}
-
-.px-6.py-4.whitespace-nowrap.text-sm { /* Table cells */
-    color: #444;
-}
-
-.px-6.py-4.whitespace-nowrap.text-sm.font-medium.text-gray-900 { /* Title cell */
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-/* Status Badges */
-.px-2.inline-flex.text-xs.leading-5.font-semibold.rounded-full { /* Base for status badges */
-    padding: 0.3em 0.6em;
-    font-weight: 600;
     text-transform: uppercase;
+    font-size: 0.8rem;
 }
 
-.bg-green-100.text-green-800 { /* Published status */
-    /* Utility classes are clear here */
+.student-table tr:hover {
+    background-color: #f9f9f9;
 }
 
-.bg-yellow-100.text-yellow-800 { /* Draft status */
-    /* Utility classes are clear here */
+.table-action-button {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s ease-in-out;
+    margin-right: 5px;
 }
 
-/* Action Buttons (Edit, Delete) */
-.text-blue-600.hover\:text-blue-900.mr-3.p-1.rounded-full.hover\:bg-blue-100.transition-colors { /* Edit button */
-    display: inline-flex;
-    align-items: center;
+.table-action-button.edit {
+    background-color: #3498db;
+    color: white;
+}
+
+.table-action-button.edit:hover {
+    background-color: #2980b9;
+}
+
+.table-action-button.delete {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.table-action-button.delete:hover {
+    background-color: #c0392b;
+}
+
+.status-Published {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px; /* For rounded pills */
+}
+
+.status-Draft {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+}
+
+
+/* --- Modal Styles --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    display: flex;
     justify-content: center;
-}
-
-.text-red-600.hover\:text-red-900.p-1.rounded-full.hover\:bg-red-100.transition-colors { /* Delete button */
-    display: inline-flex;
     align-items: center;
-    justify-content: center;
+    padding: 1rem;
+    z-index: 50; /* Ensure it's on top of other content */
+    overflow-y: auto; /* Allow scrolling for long forms on small screens */
 }
 
-/* No Assignments Found Message */
-.p-6.text-center.text-gray-600 { /* No assignments text */
-    font-style: italic;
-    padding-top: 3rem;
-    padding-bottom: 3rem;
+.modal-content {
+    background-color: #ffffff;
+    padding: 2.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh; /* This is the key change! */
+    overflow-y: auto; /* Allow form content to scroll if it gets too long */
+    margin: auto; /* Replaced the fixed margin with auto */
+    position: relative;
 }
 
-/* --- Modal Styling (remains largely the same) --- */
-.fixed.inset-0.bg-gray-600.bg-opacity-50.flex.justify-center.items-center.p-4.z-50 { /* Modal overlay */
-    /* Full screen overlay with semi-transparent background */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
 }
 
-.bg-white.p-8.rounded-lg.shadow-xl.w-full.max-w-md { /* Modal content box */
-    max-height: 90vh; /* Prevent modal from being too tall on small screens */
-    overflow-y: auto; /* Allow scrolling if content overflows */
-    animation: fadeIn 0.3s ease-out; /* Simple fade-in animation */
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.flex.justify-between.items-center.mb-6 { /* Modal header */
-    border-bottom: 1px solid #eee;
-    padding-bottom: 1rem;
-    margin-bottom: 1.5rem !important; /* Override default mb-6 from component */
-}
-
-h3.text-2xl.font-bold.text-gray-800 { /* Modal title */
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
     color: #2c3e50;
 }
 
-.text-gray-500.hover\:text-gray-700 { /* Close modal button (X icon) */
-    /* Utility classes sufficient */
+.modal-close-button {
+    color: #95a5a6;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
 }
 
-.space-y-4 { /* Form groups spacing */
-    /* Utility classes provide good spacing */
+.modal-close-button:hover {
+    color: #34495e;
 }
 
-/* Form Group Labels and Inputs */
-.block.text-sm.font-medium.text-gray-700 { /* Labels */
-    margin-bottom: 0.25rem;
+.form-field {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.9rem;
     font-weight: 500;
+    color: #34495e;
+    margin-bottom: 0.5rem;
 }
 
-.mt-1.block.w-full.border.border-gray-300.rounded-md.shadow-sm.p-2.focus\:ring-blue-500.focus\:border-blue-500 { /* Inputs and Textareas */
-    transition: all 0.2s ease;
+.form-input,
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #dcdcdc;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    color: #555;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
-.mt-1.block.w-full.border.border-gray-300.rounded-md.shadow-sm.p-2.focus\:ring-blue-500.focus\:border-blue-500:focus {
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    outline: none;
     border-color: #3498db;
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
 }
 
-/* Modal Actions (Save/Cancel Buttons) */
-.flex.justify-end.space-x-3.mt-6 { /* Button container */
-    padding-top: 1rem;
-    border-top: 1px solid #eee;
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
 }
 
-.px-5.py-2.border.border-gray-300.rounded-md.text-gray-700.hover\:bg-gray-50.transition-colors { /* Cancel button */
-    font-weight: 500;
-}
-
-.px-5.py-2.bg-blue-600.text-white.rounded-md.shadow-md.hover\:bg-blue-700.transition-colors { /* Save/Add button */
+.cancel-button {
+    padding: 0.75rem 1.5rem;
+    background-color: #ecf0f1;
+    color: #34495e;
+    border-radius: 0.5rem;
+    font-size: 1rem;
     font-weight: 600;
-    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.2);
+    transition: background-color 0.2s ease-in-out;
+    border: none;
+    cursor: pointer;
 }
 
-.px-5.py-2.bg-blue-600.text-white.rounded-md.shadow-md.hover\:bg-blue-700.transition-colors:hover {
-    transform: translateY(-1px);
+.cancel-button:hover {
+    background-color: #d5dbdb;
 }
 
-/* --- Responsive Adjustments --- */
-@media (max-width: 768px) {
-    .dashboard-cards-grid {
-        grid-template-columns: 1fr; /* Stack cards on small screens */
-    }
-    .quick-actions-grid {
-        grid-template-columns: 1fr;
-    }
-    .section-card {
-        padding: 1.5rem;
-    }
-    .main-title {
-        font-size: 1.8rem;
-        margin-bottom: 1.5rem;
-    }
-    .my-assignments-section .manage-button {
-        width: 100%;
-    }
-    .quick-action-button {
-        width: 100%;
-    }
+.submit-button {
+    padding: 0.75rem 1.5rem;
+    background-color: #3498db;
+    color: white;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out;
+    border: none;
+    cursor: pointer;
 }
 
-@media (max-width: 640px) {
-    .assignment-dashboard-container {
-        padding: 1rem;
-    }
-    .flex.flex-col.sm\:flex-row.justify-between.items-center.mb-6.space-y-4.sm\:space-y-0 {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .relative.w-full.sm\:w-1\/3 {
-        width: 100%;
-        margin-bottom: 1rem;
-    }
-    .px-6.py-2.bg-blue-600.text-white.rounded-full.shadow-lg {
-        width: 100%;
-        justify-content: center;
-    }
-    .min-w-full.table-auto.border-collapse {
-        min-width: unset;
-    }
-    .bg-white.p-8.rounded-lg.shadow-xl.w-full.max-w-md {
-        width: 95%;
-        margin: 1rem;
-        padding: 1.5rem;
-    }
+.submit-button:hover {
+    background-color: #2980b9;
+}
+
+
+/* --- Confirmation Modal (Delete) Styles --- */
+.confirm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    z-index: 60; /* Higher z-index for confirmation */
+}
+
+.confirm-modal-content {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.confirm-modal-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #34495e;
+    margin-bottom: 1.5rem;
+}
+
+.confirm-modal-actions {
+    display: flex;
+    justify-content: space-around;
+    gap: 1rem;
+}
+
+.confirm-button {
+    flex: 1;
+    padding: 0.75rem 1.5rem;
+    background-color: #e74c3c;
+    color: white;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out;
+    border: none;
+    cursor: pointer;
+}
+
+.confirm-button:hover {
+    background-color: #c0392b;
+}
+
+.confirm-cancel-button {
+    flex: 1;
+    padding: 0.75rem 1.5rem;
+    background-color: #ecf0f1;
+    color: #34495e;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out;
+    border: none;
+    cursor: pointer;
+}
+
+.confirm-cancel-button:hover {
+    background-color: #d5dbdb;
 }
