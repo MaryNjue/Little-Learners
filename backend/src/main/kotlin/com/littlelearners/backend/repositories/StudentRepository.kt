@@ -10,7 +10,5 @@ interface StudentRepository : JpaRepository<Student, UUID> {
     // Find all students associated with a specific teacher (using teacher's ID)
     fun findByTeacherId(teacherId: UUID): List<Student>
 
-    // You might add other custom queries here, e.g.,
-    // fun findByFullNameContainingIgnoreCase(name: String): List<Student>
-    // fun findByGrade(grade: Int): List<Student>
+    fun findByGrade(grade: Int): List<Student>
 }

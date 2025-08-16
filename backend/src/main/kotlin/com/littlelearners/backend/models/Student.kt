@@ -1,6 +1,8 @@
 package com.littlelearners.backend.models
 
 import jakarta.persistence.*
+import org.hibernate.annotations.OnDelete
+import org.hibernate.annotations.OnDeleteAction
 import java.util.UUID
 
 @Entity
@@ -14,25 +16,29 @@ data class Student(
     var fullName: String,
 
     @Column(name = "registration_number", unique = true, nullable = false)
-    var regNum: String, // Registration Number
+    var regNum: String,
 
-    @Column(name = "grade")
+    @Column(name = "grade", nullable = false)
     var grade: Int,
 
-    @Column(name = "gender")
-    var gender: String, // You might consider an Enum for Gender as well
+    @Column(name = "gender", nullable = false)
+    var gender: String,
 
     @Column(name = "is_active", nullable = false)
-    var isActive: Boolean = true, // Default to true
+    var isActive: Boolean = true,
 
     @Column(name = "parent_name")
-    var parentName: String?, // Nullable as per schema
+    var parentName: String? = null,
 
     @Column(name = "performance_score")
-    var performanceScore: Int?, // Nullable as per schema
+    var performanceScore: Int? = null,
 
-    // Many-to-One relationship with User (teacher)
-    @ManyToOne(fetch = FetchType.LAZY) // LAZY fetch to avoid loading teacher data unnecessarily
-    @JoinColumn(name = "teacher_id", nullable = false) // Specifies the foreign key column
+    // Student’s own user account for login (admission number + password)
+    @OneToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
+    var user: User,
+    // Teacher who manages this student
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "teacher_id", nullable = false)
     var teacher: User
 )

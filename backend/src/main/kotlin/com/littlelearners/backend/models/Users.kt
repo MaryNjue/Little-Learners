@@ -3,28 +3,33 @@ package com.littlelearners.backend.models
 import jakarta.persistence.*
 import java.util.UUID
 
-@Entity // Marks this class as a JPA entity
-@Table(name = "users") // Specifies the table name in the database
+@Entity
+@Table(name = "users")
 data class User(
-    @Id // Marks this field as the primary key
+    @Id
     @Column(name = "id", updatable = false, nullable = false)
-    val id: UUID = UUID.randomUUID(), // Initialize with a random UUID
+    var id: UUID = UUID.randomUUID(),
 
     @Column(name = "username", unique = true, nullable = false)
     var username: String,
 
-    @Column(name = "email", unique = true, nullable = false) // Add email field here
-    var email: String, // Ensure you also have an email field if your users table has it and you use it for login
+    @Column(name = "email", unique = true, nullable = true)
+    var email: String? = null, // Nullable for students without emails
 
-    @Column(name = "firebase_uid", unique = true, nullable = true) // Add this field!
-    var firebaseUid: String? = null, // Make it nullable as it might be set after initial creation
+    @Column(name = "registration_number", unique = true, nullable = true)
+    var regNum: String? = null,
 
-    @Enumerated(EnumType.STRING) // Stores the enum name as a string in the DB
+    @Column(name = "password_hash", nullable = false)
+    var passwordHash: String, // Always required
+
+    @Column(name = "firebase_uid", unique = true, nullable = true)
+    var firebaseUid: String? = null,
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
-    var role: UserRole // Use the UserRole enum defined below
+    var role: UserRole
 )
 
-// Define an Enum for user roles
 enum class UserRole {
     TEACHER,
     STUDENT

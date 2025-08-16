@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Users, BookOpen, MessageSquare, CalendarDays, BarChart2, Settings, LogOut, Home, FileText } from 'lucide-react';
+import { Users, BookOpen, MessageSquare, CalendarDays, BarChart2, Settings, LogOut, Home, FileText, Plus } from 'lucide-react';
 import '../App.css'; // Import the main CSS file for global styles
 import './TeacherPortal.css'; // Import specific styles for TeacherPortal
 import StudentManagement from './StudentManager/StudentManagement';
 import AssignmentManager from './assignmentManager/Assignment';
+import AddSubject from '../Components/Subject/Subject'; // <-- ADDED: Import the new component
 
-// NO Firebase Imports are needed here anymore, as App.js handles global initialization
-// and provides relevant data via props or context if needed by children.
-
-function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogout }) { // <-- Make sure handleLogout is accepted here
+function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogout }) {
   const [activeView, setActiveView] = useState('dashboard');
   const [loading, setLoading] = useState(true);
+
+  // <-- ADDED: State for students and mock data
+  const [students, setStudents] = useState([]);
+  const mockStudents = [
+    { id: 'student123', name: 'Timmy L.', gradeLevel: 'K' },
+    { id: 'student456', name: 'Sarah K.', gradeLevel: '1' },
+    { id: 'student789', name: 'John D.', gradeLevel: '2' },
+  ];
 
   // UseEffect to manage loading state based on required props being available
   useEffect(() => {
@@ -18,14 +24,15 @@ function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogou
     console.log("TeacherPortal: Received Teacher Username:", loggedInTeacherUsername);
 
     // Set loading to false once loggedInTeacherId and Username are available.
-    // This ensures the content renders only after necessary data from App.js is passed down.
     if (loggedInTeacherId && loggedInTeacherUsername) {
       setLoading(false);
+      // <-- ADDED: Set the mock student data
+      setStudents(mockStudents);
     } else {
       // If for some reason props are not immediately available, keep loading
       setLoading(true);
     }
-  }, [loggedInTeacherId, loggedInTeacherUsername]); // Re-run effect if these props change
+  }, [loggedInTeacherId, loggedInTeacherUsername]);
 
   // Dummy data for dashboard overview (remains as in your original file)
   const totalStudents = 25;
@@ -137,15 +144,15 @@ function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogou
             loggedInTeacherUsername={loggedInTeacherUsername}
           />
         );
-       case 'assignments':
-      // This is the important part: rendering the AssignmentManager
-      return (
-        <AssignmentManager
-          loggedInTeacherId={loggedInTeacherId}
-          loggedInTeacherUsername={loggedInTeacherUsername}
-        />
-      );
-        
+      case 'assignments':
+        return (
+          <AssignmentManager
+            loggedInTeacherId={loggedInTeacherId}
+            loggedInTeacherUsername={loggedInTeacherUsername}
+          />
+        );
+      case 'add-subject': // <-- ADDED: New case to render the AddSubject component
+        return <AddSubject loggedInTeacherId={loggedInTeacherId} students={students} />;
       case 'analytics':
         return <h2>Analytics and Reports</h2>;
       case 'settings':
@@ -194,6 +201,17 @@ function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogou
                 >
                   <FileText className="teacher-nav-link-icon" />
                   Content & Assignments
+                </a>
+              </li>
+              {/* <-- ADDED: New navigation item for Add Subject --> */}
+              <li className="teacher-nav-item">
+                <a
+                  href="#"
+                  onClick={() => setActiveView('add-subject')}
+                  className={`teacher-nav-link ${activeView === 'add-subject' ? 'active' : ''}`}
+                >
+                  <Plus className="teacher-nav-link-icon" />
+                  Add Subject
                 </a>
               </li>
               <li className="teacher-nav-item">
