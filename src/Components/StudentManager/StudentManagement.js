@@ -16,7 +16,7 @@ function StudentManagement({ loggedInTeacherId, loggedInTeacherUsername }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStudent, setCurrentStudent] = useState(null);
 
-  const API_BASE_URL = 'http://localhost:8080';
+  const API_BASE_URL = ' https://51ac16eb448b.ngrok-free.app';
 
   const fetchStudents = async () => {
     setLoading(true);
