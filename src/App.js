@@ -120,7 +120,7 @@ function App() {
   return (
     <div className="App">
       <header className="app-header">
-        <h1>Little Learners Portal</h1>
+        <h1>Mama Bear Digital</h1>
         <nav>
           <span className="user-info">Logged in as {user.email} ({userRole.toUpperCase()})</span>
           <button onClick={handleLogout} className="logout-button">Logout</button>

@@ -54,7 +54,7 @@ function LoginPage({ onLoginSuccess }) { // onLoginSuccess prop will be used lat
   return (
     <div className="login-page">
       <div className="login-container">
-        <h2>Little Learners Portal Login</h2>
+        <h2>Mama Bear Digital Login</h2>
         <form onSubmit={handleLogin}>
           <div className="form-group">
             <label htmlFor="email">Email:</label>
