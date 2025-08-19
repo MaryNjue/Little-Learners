@@ -26,6 +26,27 @@ function App() {
       if (currentUser) {
         console.log("App.js: Current Authenticated User ID (Firebase UID):", currentUser.uid);
 
+        // ✅ Get Firebase JWT (ID Token)
+        const idToken = await currentUser.getIdToken(/* forceRefresh */ true);
+        console.log("App.js: Firebase ID Token (JWT):", idToken);
+
+        // ✅ Send the token to your Spring Boot backend for verification
+        try {
+          const response = await fetch("https://your-backend.onrender.com/api/auth/firebase-auth", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ idToken }),
+          });
+
+          const data = await response.json();
+          console.log("App.js: Backend response:", data);
+        } catch (err) {
+          console.error("App.js: Error calling backend:", err);
+        }
+
+        // ✅ Continue checking Firestore for role
         const userDocRef = doc(db, `artifacts/${app_id}/users/${currentUser.uid}`);
         const unsubscribeFirestore = onSnapshot(userDocRef, (userDocSnap) => {
           if (userDocSnap.exists()) {

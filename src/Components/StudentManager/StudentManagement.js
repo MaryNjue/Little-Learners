@@ -16,7 +16,7 @@ function StudentManagement({ loggedInTeacherId, loggedInTeacherUsername }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStudent, setCurrentStudent] = useState(null);
 
-  const API_BASE_URL = 'https://51ac16eb448b.ngrok-free.app';
+  const API_BASE_URL = 'https://little-learners-2i8y.onrender.com';
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -80,6 +80,7 @@ function StudentManagement({ loggedInTeacherId, loggedInTeacherUsername }) {
         body: JSON.stringify(updatedStudentData),
       });
 
+      
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       await fetchStudents();
     } catch (err) {
