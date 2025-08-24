@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.littlelearners.backend.dto.AuthResponse
 import com.littlelearners.backend.dto.FirebaseTokenRequest
+import com.littlelearners.backend.dto.UserLoginRequest
 import com.littlelearners.backend.models.UserRole
 import com.littlelearners.backend.services.UserService
 import org.springframework.http.HttpStatus
@@ -14,7 +15,33 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/auth")
 class AuthController(
     private val userService: UserService
-) {
+)
+
+
+
+
+
+
+
+{
+    @PostMapping("/login")
+    fun login(@RequestBody request: UserLoginRequest): ResponseEntity<Any> {
+        return try {
+            val user = userService.authenticateUser(request.username, request.password)
+            val response = AuthResponse(
+                userId = user.id,
+                username = user.username,
+                email = user.email ?: "",
+                role = user.role,
+                message = "Login successful"
+            )
+            ResponseEntity.ok(response)
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(mapOf("message" to "Invalid username or password: ${e.message}"))
+        }
+    }
+
 
     @PostMapping("/firebase-auth")
     fun firebaseAuth(@RequestBody request: FirebaseTokenRequest): ResponseEntity<Any> {

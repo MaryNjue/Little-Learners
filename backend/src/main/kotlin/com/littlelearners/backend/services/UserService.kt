@@ -3,12 +3,14 @@ package com.littlelearners.backend.services
 import com.littlelearners.backend.models.User
 import com.littlelearners.backend.models.UserRole
 import com.littlelearners.backend.repositories.UserRepository
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.util.UUID
 
 @Service
 class UserService(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val passwordEncoder: PasswordEncoder
 ) {
 
     fun registerOrUpdateUser(
@@ -36,6 +38,17 @@ class UserService(
             role = role
         )
         return userRepository.save(newUser)
+    }
+
+    fun authenticateUser(username: String, password: String): User {
+        val user = userRepository.findByUsername(username)
+            ?: throw IllegalArgumentException("User with username '$username' not found.")
+
+        if (passwordEncoder.matches(password, user.passwordHash)) {
+            return user
+        } else {
+            throw IllegalArgumentException("Invalid username or password.")
+        }
     }
 
     fun findByUsername(username: String): User? =
