@@ -9,7 +9,5 @@ import java.util.UUID
 interface StudentRepository : JpaRepository<Student, UUID> {
     // Find all students associated with a specific teacher (using teacher's ID)
     fun findByTeacherId(teacherId: UUID): List<Student>
-    fun findById(userId: String): Student?
-
     fun findByGrade(grade: Int): List<Student>
 }

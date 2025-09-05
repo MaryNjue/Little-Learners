@@ -107,11 +107,5 @@ class StudentService(
 
         studentRepository.delete(student) // user will also be deleted
     }
-
-    fun getStudentNameByUserId(userId: String): String? {
-        val student = studentRepository.findById(userId)
-        return student?.fullName
-    }
-
 }
 
