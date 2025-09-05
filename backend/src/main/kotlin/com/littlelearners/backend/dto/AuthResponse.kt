@@ -8,5 +8,5 @@ data class AuthResponse(
     val username: String,
     val email: String,
     val role: UserRole,
-    val message: String
+    val message: String,
 )

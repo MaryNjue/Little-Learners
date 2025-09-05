@@ -16,13 +16,6 @@ import org.springframework.web.bind.annotation.*
 class AuthController(
     private val userService: UserService
 )
-
-
-
-
-
-
-
 {
     @PostMapping("/login")
     fun login(@RequestBody request: UserLoginRequest): ResponseEntity<Any> {
