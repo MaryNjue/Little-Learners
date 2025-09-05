@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'; // Import Firebase auth functions
-import './LoginPage.css'; // We'll create this CSS file next
+import React, { useState } from "react";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import "./LoginPage.css";
 
-function LoginPage({ onLoginSuccess }) { // onLoginSuccess prop will be used later
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState('STUDENT'); // Default to STUDENT
+function LoginPage({ onLoginSuccess }) {
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [selectedRole, setSelectedRole] = useState("STUDENT");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const auth = getAuth(); // Get the Firebase Auth instance
+  const auth = getAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -17,35 +17,49 @@ function LoginPage({ onLoginSuccess }) { // onLoginSuccess prop will be used lat
     setLoading(true);
 
     try {
-      // 1. Authenticate with Firebase first
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
-      console.log('Firebase user authenticated:', firebaseUser);
+      if (selectedRole === "STUDENT") {
+        // 🔹 Student login against your backend
+        const response = await fetch("http://localhost:8080/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: identifier, // admission number
+            password: password,
+          }),
+        });
 
-      // --- IMPORTANT: Backend Role Verification and JWT will go here ---
-      // For now, we'll just simulate success and pass selected role
-      // In the next step, we'll make an API call to your Spring Boot backend
-      // to verify the Firebase ID Token and fetch the user's *actual* role(s)
-      // from your PostgreSQL database, then get a JWT from Spring Boot.
-      // We will *not* trust the `selectedRole` directly yet.
-      // -----------------------------------------------------------------
+        if (!response.ok) throw new Error("Invalid admission number or password.");
 
-      // Simulate successful login for now, this will be replaced
-      alert(`Successfully logged in as ${firebaseUser.email} with selected role: ${selectedRole}!`);
-      if (onLoginSuccess) {
-        // In a real app, you'd pass the actual role determined by backend
-        onLoginSuccess(firebaseUser.email, selectedRole);
+        const data = await response.json();
+        console.log("Student login success:", data);
+
+        // ✅ Save session in localStorage (must match App.js)
+        localStorage.setItem("studentToken", data.token || data.userId);
+        localStorage.setItem("role", "student");
+
+        console.log("LoginPage: Student session saved to localStorage.");
+
+        // ✅ Reload so App.js picks it up
+        window.location.reload();
+      } else {
+        // 🔹 Teacher login via Firebase
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          identifier,
+          password
+        );
+        const firebaseUser = userCredential.user;
+
+        console.log("Firebase Teacher authenticated:", firebaseUser);
+
+        localStorage.setItem("role", "teacher");
+        if (onLoginSuccess) {
+          onLoginSuccess(firebaseUser, "teacher");
+        }
       }
-
     } catch (err) {
-      console.error('Login error:', err.message);
-      let errorMessage = 'Login failed. Please check your credentials.';
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        errorMessage = 'Invalid email or password.';
-      } else if (err.code === 'auth/invalid-email') {
-        errorMessage = 'Please enter a valid email address.';
-      }
-      setError(errorMessage);
+      console.error("Login error:", err.message);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -57,15 +71,18 @@ function LoginPage({ onLoginSuccess }) { // onLoginSuccess prop will be used lat
         <h2>Mama Bear Digital Login</h2>
         <form onSubmit={handleLogin}>
           <div className="form-group">
-            <label htmlFor="email">Email:</label>
+            <label htmlFor="identifier">
+              {selectedRole === "STUDENT" ? "Admission Number:" : "Email:"}
+            </label>
             <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type={selectedRole === "STUDENT" ? "text" : "email"}
+              id="identifier"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               required
             />
           </div>
+
           <div className="form-group">
             <label htmlFor="password">Password:</label>
             <input
@@ -76,6 +93,7 @@ function LoginPage({ onLoginSuccess }) { // onLoginSuccess prop will be used lat
               required
             />
           </div>
+
           <div className="form-group role-selection">
             <label>Login As:</label>
             <div className="radio-group">
@@ -84,8 +102,8 @@ function LoginPage({ onLoginSuccess }) { // onLoginSuccess prop will be used lat
                 id="studentRole"
                 name="role"
                 value="STUDENT"
-                checked={selectedRole === 'STUDENT'}
-                onChange={() => setSelectedRole('STUDENT')}
+                checked={selectedRole === "STUDENT"}
+                onChange={() => setSelectedRole("STUDENT")}
               />
               <label htmlFor="studentRole">Student</label>
 
@@ -94,15 +112,16 @@ function LoginPage({ onLoginSuccess }) { // onLoginSuccess prop will be used lat
                 id="teacherRole"
                 name="role"
                 value="TEACHER"
-                checked={selectedRole === 'TEACHER'}
-                onChange={() => setSelectedRole('TEACHER')}
+                checked={selectedRole === "TEACHER"}
+                onChange={() => setSelectedRole("TEACHER")}
               />
               <label htmlFor="teacherRole">Teacher</label>
             </div>
           </div>
+
           {error && <p className="error-message">{error}</p>}
           <button type="submit" disabled={loading}>
-            {loading ? 'Logging In...' : 'Login'}
+            {loading ? "Logging In..." : "Login"}
           </button>
         </form>
       </div>

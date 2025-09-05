@@ -1,15 +1,17 @@
 // App.js
-import React, { useState, useEffect } from 'react';
-import firebaseApp from './firebaseConfig'; // ✅ Import the initialized Firebase app
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
+import React, { useState, useEffect } from "react";
+import firebaseApp from "./firebaseConfig";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { getFirestore, doc, onSnapshot } from "firebase/firestore";
 
-import LoginPage from './Components/Auth/LoginPage';
-import StudentPortal from './Components/StudentPortal';
-import TeacherPortal from './Components/TeacherPortal';
-import './App.css';
+import LoginPage from "./Components/Auth/LoginPage";
+import StudentPortal from "./Components/StudentPortal";
+import TeacherPortal from "./Components/TeacherPortal";
+import "./App.css";
 
-const app_id = (process.env.REACT_APP_APP_ID || 'local-dev-app-id').split('#')[0].trim();
+const app_id = (process.env.REACT_APP_APP_ID || "local-dev-app-id")
+  .split("#")[0]
+  .trim();
 
 function App() {
   const [user, setUser] = useState(null);
@@ -20,123 +22,131 @@ function App() {
   const db = getFirestore(firebaseApp);
 
   useEffect(() => {
+    // 🔹 Step 1: Check if a student session exists in localStorage
+    const localToken = localStorage.getItem("studentToken");
+    const localRole = localStorage.getItem("role");
+
+    if (localToken && localRole === "student") {
+      console.log("App.js: Found student session in localStorage.");
+      setUser({ uid: "student-local", email: "student@local" }); // dummy object
+      setUserRole("student");
+      setLoading(false);
+      return;
+    }
+
+    // 🔹 Step 2: Fallback to Firebase (teachers)
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
 
       if (currentUser) {
-        console.log("App.js: Current Authenticated User ID (Firebase UID):", currentUser.uid);
+        console.log("App.js: Firebase Authenticated User:", currentUser.uid);
 
-        // ✅ Get Firebase JWT (ID Token)
-        const idToken = await currentUser.getIdToken(/* forceRefresh */ true);
-        console.log("App.js: Firebase ID Token (JWT):", idToken);
-
-        // ✅ Send the token to your Spring Boot backend for verification
         try {
-          const response = await fetch("https://your-backend.onrender.com/api/auth/firebase-auth", {
+          const idToken = await currentUser.getIdToken(true);
+          await fetch("http://localhost:8080/api/auth/firebase-auth", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ idToken }),
           });
 
-          const data = await response.json();
-          console.log("App.js: Backend response:", data);
+          const userDocRef = doc(
+            db,
+            `artifacts/${app_id}/users/${currentUser.uid}`
+          );
+          const unsubscribeFirestore = onSnapshot(
+            userDocRef,
+            (snap) => {
+              if (snap.exists()) {
+                const data = snap.data();
+                setUserRole(data.role ? data.role.toLowerCase() : "teacher");
+              } else {
+                setUserRole("teacher"); // default
+              }
+              setLoading(false);
+            },
+            (error) => {
+              console.error("Firestore error:", error);
+              setLoading(false);
+            }
+          );
+          return () => unsubscribeFirestore();
         } catch (err) {
-          console.error("App.js: Error calling backend:", err);
+          console.error("Backend verification failed:", err);
+          setLoading(false);
         }
-
-        // ✅ Continue checking Firestore for role
-        const userDocRef = doc(db, `artifacts/${app_id}/users/${currentUser.uid}`);
-        const unsubscribeFirestore = onSnapshot(userDocRef, (userDocSnap) => {
-          if (userDocSnap.exists()) {
-            const userData = userDocSnap.data();
-            setUserRole(userData.role ? userData.role.toLowerCase() : null);
-            console.log("App.js: User role fetched from Firestore (normalized):", userData.role ? userData.role.toLowerCase() : null);
-          } else {
-            console.warn("App.js: User document not found. They may be a new user.");
-            setUserRole(null);
-          }
-          setLoading(false);
-        }, (error) => {
-          console.error("App.js: Error listening to user document:", error);
-          setLoading(false);
-        });
-
-        return () => unsubscribeFirestore();
-
       } else {
+        setUser(null);
         setUserRole(null);
         setLoading(false);
-        console.log("App.js: User signed out or no user.");
       }
     });
 
     return () => unsubscribeAuth();
-
   }, [auth, db]);
 
   const handleLogout = async () => {
-    try {
+    const role = localStorage.getItem("role");
+
+    if (role === "student") {
+      localStorage.removeItem("studentToken");
+      localStorage.removeItem("role");
+      setUser(null);
+      setUserRole(null);
+      console.log("App.js: Student logged out.");
+    } else {
       await signOut(auth);
-      console.log("App.js: User logged out successfully.");
-    } catch (error) {
-      console.error('App.js: Logout error:', error.message);
-      alert('Error logging out. Check console for details.');
+      console.log("App.js: Teacher logged out.");
     }
+  };
+
+  // ✅ Handler for LoginPage
+  const handleLoginSuccess = (loggedInUser, role) => {
+    console.log("App.js: Login success callback:", role, loggedInUser);
+    setUser(loggedInUser);
+    setUserRole(role);
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <p className="text-lg font-semibold text-gray-700">Loading authentication state...</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    console.log("App.js: No authenticated user, rendering LoginPage.");
-    return <LoginPage />;
-  }
-
-  if (!userRole) {
-    console.log("App.js: User authenticated, but role not yet fetched or found.");
-    return (
-      <div className="app-container flex flex-col items-center justify-center min-h-screen">
-        <h2 className="text-2xl font-bold mb-4">Welcome Back!</h2>
-        <p className="text-lg mb-8">We are setting up your profile...</p>
-        <p className="text-sm text-gray-600">
-          (If you're stuck on this page, a role might not be assigned in Firestore.
-          Check the browser console for details.)
+        <p className="text-lg font-semibold text-gray-700">
+          Loading authentication state...
         </p>
       </div>
     );
   }
 
-  console.log("App.js - Final userRole state:", userRole);
-  console.log("App.js - Is TeacherPortal supposed to render?", userRole === 'teacher');
-  console.log("App.js - Is StudentPortal supposed to render?", userRole === 'student');
+  if (!user) {
+    console.log("App.js: No authenticated user → show LoginPage");
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <div className="App">
       <header className="app-header">
         <h1>Mama Bear Digital</h1>
         <nav>
-          <span className="user-info">Logged in as {user.email} ({userRole.toUpperCase()})</span>
-          <button onClick={handleLogout} className="logout-button">Logout</button>
+          <span className="user-info">
+            Logged in as {user.email || "Student"} ({userRole?.toUpperCase()})
+          </span>
+          <button onClick={handleLogout} className="logout-button">
+            Logout
+          </button>
         </nav>
       </header>
-      {userRole === 'teacher' && (
+
+      {userRole === "teacher" && (
         <TeacherPortal
           loggedInTeacherId={user.uid}
           loggedInTeacherUsername={user.email}
           handleLogout={handleLogout}
         />
       )}
-      {userRole === 'student' && (
+
+      {userRole === "student" && (
         <StudentPortal
           loggedInStudentId={user.uid}
-          loggedInStudentUsername={user.email}
+          loggedInStudentUsername={user.email || "Student"}
         />
       )}
     </div>

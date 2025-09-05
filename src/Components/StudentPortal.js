@@ -12,7 +12,9 @@ function StudentPortal({ loggedInStudentId, loggedInStudentUsername }) {
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
   const [selectedAssignmentForSubmission, setSelectedAssignmentForSubmission] = useState(null);
 
-  // --- DEBUGGING LOGS ---
+  
+
+  // --- DEBUGGING LOGS ---npm
   useEffect(() => {
     console.log("StudentPortal is being rendered.");
     if (loggedInStudentId) {
