@@ -290,7 +290,17 @@ function StudentManagement({ loggedInTeacherId, loggedInTeacherUsername }) {
 
               <div className="form-group"><label>Full Name:</label><input type="text" name="fullName" defaultValue={currentStudent?.fullName||''} required/></div>
               <div className="form-group"><label>Registration Number:</label><input type="text" name="regNum" defaultValue={currentStudent?.regNum||''} required/></div>
-              <div className="form-group"><label>Grade:</label><input type="number" name="grade" defaultValue={currentStudent?.grade||''} required/></div>
+             <div className="form-group">
+  <label>Grade:</label>
+  <select name="grade" defaultValue={currentStudent?.grade || ''} required>
+    <option value="">Select Grade</option>
+    <option value="PP1">PP1</option>
+    <option value="PP2">PP2</option>
+    <option value="Grade 1">Grade 1</option>
+    <option value="Grade 2">Grade 2</option>
+    <option value="Grade 3">Grade 3</option>
+  </select>
+</div>
               <div className="form-group"><label>Gender:</label>
                 <select name="gender" defaultValue={currentStudent?.gender||''} required>
                   <option value="">Select Gender</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option>
