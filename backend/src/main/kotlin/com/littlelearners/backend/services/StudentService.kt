@@ -72,7 +72,7 @@ class StudentService(
         id: UUID,
         fullName: String,
         regNum: String,
-        grade: Int,
+        grade: String,
         gender: String,
         isActive: Boolean,
         parentName: String?,

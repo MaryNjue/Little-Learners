@@ -19,7 +19,7 @@ data class Student(
     var regNum: String,
 
     @Column(name = "grade", nullable = false)
-    var grade: Int,
+    var grade: String,
 
     @Column(name = "gender", nullable = false)
     var gender: String,
