@@ -11,5 +11,5 @@ interface StudentRepository : JpaRepository<Student, UUID> {
     fun findByTeacherId(teacherId: UUID): List<Student>
     fun findByUserId(userId: UUID): Student?
 
-    fun findByGrade(grade: Int): List<Student>
+    fun findByGrade(grade: String): List<Student>
 }
