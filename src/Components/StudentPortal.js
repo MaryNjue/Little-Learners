@@ -2,19 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Home, Bell, User, BookOpen, Calculator, Leaf, Music, Gamepad2, Award, Palette, ClipboardList, Megaphone, MessageCircle, Heart, Sparkles, Rainbow, FileText, CheckCircle, Clock } from 'lucide-react'; // Added FileText, CheckCircle, Clock for assignments view
 import '../App.css'; // Ensure App.css is imported for general styles
 
-// StudentPortal component now accepts loggedInStudentId and loggedInStudentUsername as props
 function StudentPortal({ loggedInStudentId, loggedInStudentUsername }) {
-  // New state to manage the active view within the student portal
-  const [activeStudentView, setActiveStudentView] = useState('dashboard'); // 'dashboard' or 'assignments'
 
-  // State for assignment data and submission modal
+  const [activeStudentView, setActiveStudentView] = useState('dashboard');
+  
   const [myAssignments, setMyAssignments] = useState([]);
   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
   const [selectedAssignmentForSubmission, setSelectedAssignmentForSubmission] = useState(null);
 
   
 
-  // --- DEBUGGING LOGS ---npm
+
   useEffect(() => {
     console.log("StudentPortal is being rendered.");
     if (loggedInStudentId) {

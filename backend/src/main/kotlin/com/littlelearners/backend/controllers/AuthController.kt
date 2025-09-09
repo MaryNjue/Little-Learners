@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.littlelearners.backend.dto.AuthResponse
 import com.littlelearners.backend.dto.FirebaseTokenRequest
+import com.littlelearners.backend.dto.LoginResponse
 import com.littlelearners.backend.dto.UserLoginRequest
 import com.littlelearners.backend.models.UserRole
 import com.littlelearners.backend.services.UserService
@@ -20,20 +21,15 @@ class AuthController(
     @PostMapping("/login")
     fun login(@RequestBody request: UserLoginRequest): ResponseEntity<Any> {
         return try {
-            val user = userService.authenticateUser(request.username, request.password)
-            val response = AuthResponse(
-                userId = user.id,
-                username = user.username,
-                email = user.email ?: "",
-                role = user.role,
-                message = "Login successful"
-            )
+            // ✅ Pass the entire DTO, not just username
+            val response: LoginResponse = userService.authenticateUser(request)
             ResponseEntity.ok(response)
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(mapOf("message" to "Invalid username or password: ${e.message}"))
+                .body(mapOf("message" to (e.message ?: "Invalid username or password")))
         }
     }
+
 
 
     @PostMapping("/firebase-auth")
@@ -47,12 +43,13 @@ class AuthController(
 
             // Placeholder hash for Firebase accounts that don’t use local passwords
             val placeholderPasswordHash = "FIREBASE_USER_NO_PASSWORD"
+            val placeholderPassword = "firebase_placeholder_password"
 
             val user = userService.registerOrUpdateUser(
                 username = safeUsername,
                 email = safeEmail,
                 firebaseUid = firebaseUid,
-                passwordHash = placeholderPasswordHash,
+                password = placeholderPassword,
                 role = UserRole.TEACHER
             )
 
@@ -61,6 +58,7 @@ class AuthController(
                 username = user.username,
                 email = user.email ?: safeEmail,
                 role = user.role,
+                fullName = decodedToken.name ?: safeUsername,
                 message = "Firebase authentication successful"
             )
 

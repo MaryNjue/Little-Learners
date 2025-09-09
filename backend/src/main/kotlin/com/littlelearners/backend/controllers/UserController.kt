@@ -28,7 +28,7 @@ class UserController(
                 email = request.email,
                 firebaseUid = null, // will be set after Firebase auth if needed
                 role = role,
-                passwordHash = request.password
+                password = request.password 
             )
 
             ResponseEntity.status(HttpStatus.CREATED).body(createdUser)

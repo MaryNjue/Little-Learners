@@ -13,6 +13,7 @@ data class User(
     @Column(name = "username", unique = true, nullable = false)
     var username: String,
 
+
     @Column(name = "email", unique = true, nullable = true)
     var email: String? = null, // Nullable for students without emails
 

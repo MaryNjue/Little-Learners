@@ -26,6 +26,7 @@ data class LoginResponse(
     val userId: UUID,
     val username: String,
     val role: UserRole,
-    val message: String = "Login successful"
+    val message: String = "Login successful",
+    val fullName: String? = null
     // In a real application, you'd include a JWT token here
 )

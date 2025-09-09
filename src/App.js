@@ -28,7 +28,17 @@ function App() {
 
     if (localToken && localRole === "student") {
       console.log("App.js: Found student session in localStorage.");
-      setUser({ uid: "student-local", email: "student@local" }); // dummy object
+      const storedUsername = localStorage.getItem("studentUsername");
+      const storedFullName = localStorage.getItem("studentFullName"); 
+
+      console.log("DEBUG storedFullName:", storedFullName);
+  console.log("DEBUG storedUsername:", storedUsername);
+  
+      setUser({
+        uid: "student-local",
+        email: storedUsername,
+        displayName: storedFullName, // ✅ NEW
+      });
       setUserRole("student");
       setLoading(false);
       return;
@@ -90,6 +100,8 @@ function App() {
     if (role === "student") {
       localStorage.removeItem("studentToken");
       localStorage.removeItem("role");
+      localStorage.removeItem("studentUsername"); // ✅ cleanup
+      localStorage.removeItem("studentFullName"); // ✅ cleanup
       setUser(null);
       setUserRole(null);
       console.log("App.js: Student logged out.");
@@ -127,7 +139,8 @@ function App() {
         <h1>Mama Bear Digital</h1>
         <nav>
           <span className="user-info">
-            Logged in as {user.email || "Student"} ({userRole?.toUpperCase()})
+            Logged in as {user.displayName || user.email || "Student"} (
+            {userRole?.toUpperCase()})
           </span>
           <button onClick={handleLogout} className="logout-button">
             Logout
@@ -146,7 +159,9 @@ function App() {
       {userRole === "student" && (
         <StudentPortal
           loggedInStudentId={user.uid}
-          loggedInStudentUsername={user.email || "Student"}
+          loggedInStudentUsername={
+            user.displayName || user.email || "Student"
+          } // ✅ now shows fullName
         />
       )}
     </div>

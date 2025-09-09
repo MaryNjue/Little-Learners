@@ -36,8 +36,21 @@ function LoginPage({ onLoginSuccess }) {
         // ✅ Save session in localStorage (must match App.js)
         localStorage.setItem("studentToken", data.token || data.userId);
         localStorage.setItem("role", "student");
+        localStorage.setItem("studentUsername", data.username || identifier);
+        localStorage.setItem("studentFullName", data.fullName || "Student");
+        console.log("Saved to localStorage →", data.fullName, data.username);
+
 
         console.log("LoginPage: Student session saved to localStorage.");
+
+        onLoginSuccess(
+    {
+      uid: data.userId,
+      email: data.username,
+      displayName: data.fullName,
+    },
+    "student"
+  );
 
         // ✅ Reload so App.js picks it up
         window.location.reload();
