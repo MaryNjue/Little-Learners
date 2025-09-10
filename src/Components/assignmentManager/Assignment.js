@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth } from 'firebase/auth';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
 import {
   collection,
   doc,
@@ -40,6 +42,7 @@ const CustomConfirmModal = ({ message, onConfirm, onCancel }) => {
 // Assignment Form Modal Component
 const AssignmentFormModal = ({ isOpen, onClose, onSave, initialAssignment, db, appId, userId }) => {
   const [formState, setFormState] = useState(initialAssignment || {
+    
     title: '',
     description: '',
     dueDate: '',
@@ -47,11 +50,12 @@ const AssignmentFormModal = ({ isOpen, onClose, onSave, initialAssignment, db, a
     status: 'Draft',
     maxMarks: '',
     assignmentType: 'uploaded',
-    fileUrl: '',
     automatedConfig: '',
     assignedTo: 'all',
     assignedStudentIds: '',
   });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const storage = getStorage();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -74,6 +78,13 @@ const AssignmentFormModal = ({ isOpen, onClose, onSave, initialAssignment, db, a
       automatedConfig: formState.automatedConfig || null,
       fileUrl: formState.fileUrl || null,
     };
+   
+if (selectedFile) {
+  const storageRef = ref(storage, `assignments/${userId}/${selectedFile.name}`);
+  const snapshot = await uploadBytes(storageRef, selectedFile);
+  assignmentData.fileUrl = await getDownloadURL(snapshot.ref);
+}
+
 
     try {
       if (initialAssignment) {
@@ -188,16 +199,14 @@ const AssignmentFormModal = ({ isOpen, onClose, onSave, initialAssignment, db, a
 
           {formState.assignmentType === 'uploaded' && (
             <div className="form-field">
-              <label htmlFor="fileUrl" className="form-label">File URL (Optional)</label>
+              
               <input
-                type="url"
-                id="fileUrl"
-                name="fileUrl"
-                value={formState.fileUrl}
-                onChange={handleInputChange}
-                placeholder="e.g., https://example.com/assignment.pdf"
-                className="form-input"
-              />
+               type="file"
+               id="fileUpload"
+               accept=".pdf,.doc,.docx"
+               onChange={(e) => setSelectedFile(e.target.files[0])}
+               className="form-input mt-2"
+/>
             </div>
           )}
 

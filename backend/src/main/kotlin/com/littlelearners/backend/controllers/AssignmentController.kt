@@ -9,6 +9,10 @@ import jakarta.persistence.EntityNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import java.util.UUID
 
 @RestController
@@ -18,6 +22,29 @@ class AssignmentController(
     private val userService: UserService,
     private val objectMapper: ObjectMapper
 ) {
+
+
+    @PostMapping("/upload-file")
+    fun uploadAssignmentFile(
+        @RequestParam("file") file: MultipartFile
+    ): ResponseEntity<Any> {
+        return try {
+            val uploadDir = "uploads/assignments"
+            val path = Paths.get(uploadDir)
+            if (!Files.exists(path)) {
+                Files.createDirectories(path)
+            }
+
+            val fileName = file.originalFilename ?: "file-${System.currentTimeMillis()}"
+            val targetPath = path.resolve(fileName)
+            Files.copy(file.inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING)
+
+            ResponseEntity.ok(mapOf("fileUrl" to "$uploadDir/$fileName"))
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("message" to "File upload failed: ${e.message}"))
+        }
+    }
 
     @PostMapping
     fun createAssignment(@RequestBody request: AssignmentRequest): ResponseEntity<Any> {

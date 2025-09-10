@@ -10,6 +10,7 @@ class WebConfig : WebMvcConfigurer {
         registry.addMapping("/**")
             .allowedOriginPatterns(
                 "http://localhost:3000",
+                "http://localhost:8080",
                 "https://*.ngrok-free.app",             // any ngrok subdomain
                 "https://little-learners-three.vercel.app" // your Vercel frontend
             )
