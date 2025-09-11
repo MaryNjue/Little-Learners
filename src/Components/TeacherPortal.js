@@ -5,6 +5,9 @@ import './TeacherPortal.css'; // Import specific styles for TeacherPortal
 import StudentManagement from './StudentManager/StudentManagement';
 import AssignmentManager from './assignmentManager/Assignment';
 import AddSubject from '../Components/Subject/Subject'; // <-- ADDED: Import the new component
+import { db } from "../firebaseConfig";
+
+
 
 function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogout }) {
   const [activeView, setActiveView] = useState('dashboard');
@@ -147,8 +150,11 @@ function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogou
       case 'assignments':
         return (
           <AssignmentManager
-            loggedInTeacherId={loggedInTeacherId}
-            loggedInTeacherUsername={loggedInTeacherUsername}
+             db={db} 
+             appId={loggedInTeacherId}         
+             userId={loggedInTeacherId}        
+             loggedInTeacherId={loggedInTeacherId}
+             loggedInTeacherUsername={loggedInTeacherUsername}
           />
         );
       case 'add-subject': // <-- ADDED: New case to render the AddSubject component
