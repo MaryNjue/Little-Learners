@@ -1,0 +1,137 @@
+.assignments-wrapper {
+  padding: 20px;
+}
+
+.assignments-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.assignments-list {
+  list-style: none;
+  padding: 0;
+}
+
+.assignment-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background-color: #f9f9f9;
+}
+
+.assignment-info {
+  flex-grow: 1;
+}
+
+.assignment-title {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.assignment-due, .assignment-status, .assignment-feedback {
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.status-pending {
+  color: orange;
+  font-weight: bold;
+}
+
+.status-graded {
+  color: green;
+  font-weight: bold;
+}
+
+.assignment-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 16px;
+}
+
+.download-button, .submit-button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.download-button {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.submit-button {
+  background-color: #10b981;
+  color: white;
+}
+
+.download-button:hover {
+  background-color: #2563eb;
+}
+
+.submit-button:hover {
+  background-color: #059669;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cancel-btn {
+  background-color: #e5e7eb;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.cancel-btn:hover {
+  background-color: #d1d5db;
+}
+
+.submit-btn {
+  background-color: #3b82f6;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.submit-btn:hover {
+  background-color: #2563eb;
+}

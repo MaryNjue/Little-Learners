@@ -81,6 +81,21 @@ class AssignmentService(
         return assignmentRepository.save(existingAssignment)
     }
 
+    fun getAssignmentsForStudent(studentId: UUID): List<Assignment> {
+        // Fetch all assignments
+        val allAssignments = assignmentRepository.findAll()
+
+        return allAssignments.filter { assignment ->
+            val assignedIds = assignment.assignedStudentIds?.let {
+                objectMapper.readValue(it, Array<UUID>::class.java).toList()
+            } ?: emptyList()
+
+            // Return assignments either for "all" students or specifically assigned to this student
+            assignment.assignedTo == "all" || assignedIds.contains(studentId)
+        }
+    }
+
+
     fun deleteAssignment(id: UUID) {
         if (!assignmentRepository.existsById(id)) {
             throw EntityNotFoundException("Assignment with ID $id not found")

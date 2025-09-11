@@ -46,6 +46,8 @@ class AssignmentController(
         }
     }
 
+
+
     @PostMapping
     fun createAssignment(@RequestBody request: AssignmentRequest): ResponseEntity<Any> {
         return try {
@@ -118,6 +120,38 @@ class AssignmentController(
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("message" to "Failed to fetch assignments: ${e.message}"))
         }
     }
+
+    @GetMapping("/student/{studentId}")
+    fun getAssignmentsForStudent(@PathVariable studentId: UUID): ResponseEntity<Any> {
+        return try {
+            // Fetch assignments visible to this student
+            val assignments = assignmentService.getAssignmentsForStudent(studentId)
+
+            val responses = assignments.map { assignment ->
+                AssignmentResponse(
+                    id = assignment.id!!,
+                    title = assignment.title,
+                    description = assignment.description,
+                    dueDate = assignment.dueDate,
+                    teacherId = assignment.teacher.id!!,
+                    teacherUsername = assignment.teacher.username,
+                    subject = assignment.subject,
+                    maxMarks = assignment.maxMarks,
+                    fileUrl = assignment.fileUrl,
+                    assignedTo = assignment.assignedTo,
+                    assignedStudentIds = assignment.assignedStudentIds?.let {
+                        objectMapper.readValue(it, Array<UUID>::class.java).toList()
+                    }
+                )
+            }
+
+            ResponseEntity.ok(responses)
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("message" to "Failed to fetch assignments: ${e.message}"))
+        }
+    }
+
 
     @PutMapping("/{id}")
     fun updateAssignment(@PathVariable id: UUID, @RequestBody request: AssignmentRequest): ResponseEntity<Any> {

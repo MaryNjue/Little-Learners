@@ -66,7 +66,7 @@ const AssignmentFormModal = ({ isOpen, onClose, onSaved, initialAssignment, user
   const uploadFileToServer = async (file) => {
     const fd = new FormData();
     fd.append('file', file);
-    const res = await fetch('http://localhost:8080/api/assignments/upload-file', {
+    const res = await fetch('https://little-learners-2i8y.onrender.com/api/assignments/upload-file', {
       method: 'POST',
       body: fd
     });
@@ -113,14 +113,14 @@ const AssignmentFormModal = ({ isOpen, onClose, onSaved, initialAssignment, user
       let res;
       if (initialAssignment && initialAssignment.id) {
         // update
-        res = await fetch(`http://localhost:8080/api/assignments/${initialAssignment.id}`, {
+        res = await fetch(`https://little-learners-2i8y.onrender.com/api/assignments/${initialAssignment.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
       } else {
         // create
-        res = await fetch('http://localhost:8080/api/assignments', {
+        res = await fetch('https://little-learners-2i8y.onrender.com/api/assignments', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -277,7 +277,7 @@ function AssignmentManager({ /* db, appId (not used here) */ }) {
     }
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:8080/api/assignments/teacher/${userId}`);
+      const res = await fetch(`https://little-learners-2i8y.onrender.com/api/assignments/teacher/${userId}`);
       if (!res.ok) throw new Error('Failed to fetch assignments');
       const data = await res.json();
       setAssignments(data);
@@ -324,7 +324,7 @@ function AssignmentManager({ /* db, appId (not used here) */ }) {
     if (!assignmentToDelete) return;
 
     try {
-      const res = await fetch(`http://localhost:8080/api/assignments/${assignmentToDelete}`, {
+      const res = await fetch(`https://little-learners-2i8y.onrender.com/api/assignments/${assignmentToDelete}`, {
         method: 'DELETE'
       });
       if (!res.ok) {

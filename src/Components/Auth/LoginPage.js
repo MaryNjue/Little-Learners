@@ -34,6 +34,7 @@ function LoginPage({ onLoginSuccess }) {
         console.log("Student login success:", data);
 
         // ✅ Save session in localStorage (must match App.js)
+        localStorage.setItem("studentUserId", data.userId);
         localStorage.setItem("studentToken", data.token || data.userId);
         localStorage.setItem("role", "student");
         localStorage.setItem("studentUsername", data.username || identifier);
