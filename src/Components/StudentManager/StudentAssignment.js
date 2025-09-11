@@ -18,7 +18,7 @@ function StudentAssignments() {
 
     console.log("Fetching assignments for studentId:", loggedInStudentId);
 
-    axios.get(`http://localhost:8080/api/assignments/student/${loggedInStudentId}`)
+    axios.get(`https://little-learners-2i8y.onrender.com/api/assignments/student/${loggedInStudentId}`)
       .then(res => {
         setAssignments(res.data);
       })
