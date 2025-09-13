@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.littlelearners.backend.dto.AssignmentRequest
 import com.littlelearners.backend.dto.AssignmentResponse
 import com.littlelearners.backend.services.AssignmentService
+import com.littlelearners.backend.services.FileUploadService
 import com.littlelearners.backend.services.UserService
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.http.HttpStatus
@@ -20,31 +21,24 @@ import java.util.UUID
 class AssignmentController(
     private val assignmentService: AssignmentService,
     private val userService: UserService,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val fileUploadService: FileUploadService
 ) {
 
 
     @PostMapping("/upload-file")
-    fun uploadAssignmentFile(
-        @RequestParam("file") file: MultipartFile
-    ): ResponseEntity<Any> {
+    fun uploadAssignmentFile(@RequestParam("file") file: MultipartFile): ResponseEntity<Any> {
         return try {
-            val uploadDir = "uploads/assignments"
-            val path = Paths.get(uploadDir)
-            if (!Files.exists(path)) {
-                Files.createDirectories(path)
-            }
+            // ✅ Call Cloudinary service instead of saving locally
+            val fileUrl = fileUploadService.uploadFile(file)
 
-            val fileName = file.originalFilename ?: "file-${System.currentTimeMillis()}"
-            val targetPath = path.resolve(fileName)
-            Files.copy(file.inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING)
-
-            ResponseEntity.ok(mapOf("fileUrl" to "$uploadDir/$fileName"))
+            ResponseEntity.ok(mapOf("fileUrl" to fileUrl))
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(mapOf("message" to "File upload failed: ${e.message}"))
         }
     }
+
 
 
 

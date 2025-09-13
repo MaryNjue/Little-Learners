@@ -56,8 +56,6 @@ function StudentAssignments() {
       );
 
       alert("Assignment submitted successfully!");
-
-      // Update status locally
       setAssignments(prev =>
         prev.map(a =>
           a.id === selectedAssignment.id ? { ...a, status: 'SUBMITTED_PENDING_GRADE' } : a
@@ -95,17 +93,17 @@ function StudentAssignments() {
               </div>
 
               <div className="assignment-actions">
-                {a.fileUrl && (
-                  <a href={a.fileUrl} target="_blank" rel="noopener noreferrer" className="download-button">
-                    <Download size={16} /> Download Assignment
-                  </a>
-                )}
-                {a.status === 'PENDING' && (
-                  <button onClick={() => handleOpenModal(a)} className="submit-button">
-                    <CheckCircle size={16} /> Submit
-                  </button>
-                )}
-              </div>
+  {a.fileUrl && (
+    <a href={a.fileUrl} target="_blank" rel="noopener noreferrer">
+  Download Assignment
+</a>
+  )}
+  {a.status === 'PENDING' && (
+    <button onClick={() => handleOpenModal(a)} className="submit-button">
+      <CheckCircle size={16} /> Submit
+    </button>
+  )}
+</div>
             </li>
           ))}
         </ul>
