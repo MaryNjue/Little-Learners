@@ -123,7 +123,6 @@ function StudentManagement({ loggedInTeacherId, loggedInTeacherUsername }) {
     setCurrentStudent(null);
   };
 
-  // ✅ Single-request flow: send everything to /api/students (no separate /api/users call)
   const handleSubmitStudentForm = async (e) => {
     e.preventDefault();
     try {
@@ -141,7 +140,7 @@ function StudentManagement({ loggedInTeacherId, loggedInTeacherUsername }) {
         teacherFirebaseUid: auth.currentUser.uid
       };
 
-      // 🔁 Always include email and password for BOTH create and update
+    
       const studentData = {
         ...basePayload,
         email: formData.get('email'),

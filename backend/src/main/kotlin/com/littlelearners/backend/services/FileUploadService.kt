@@ -10,8 +10,12 @@ class FileUploadService(private val cloudinary: Cloudinary) {
     fun uploadFile(file: MultipartFile): String {
         val uploadResult = cloudinary.uploader().upload(
             file.bytes,
-            mapOf("folder" to "assignments") // files go into "assignments" folder
+            mapOf(
+                "folder" to "assignments",
+                "resource_type" to "auto",
+                "access_mode" to "public"
+            )
         )
-        return uploadResult["secure_url"].toString() // ✅ return public Cloudinary URL
+        return uploadResult["secure_url"].toString()
     }
 }
