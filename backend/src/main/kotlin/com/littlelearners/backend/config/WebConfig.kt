@@ -15,7 +15,7 @@ class WebConfig : WebMvcConfigurer {
                 "http://localhost:8080",
                 "https://little-learners-three.vercel.app"
             )
-            .allowedOriginPatterns("https://*.ngrok-free.app") // keep wildcard here
+            .allowedOriginPatterns("https://*.ngrok-free.app")
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .allowedHeaders("*")
             .allowCredentials(true)

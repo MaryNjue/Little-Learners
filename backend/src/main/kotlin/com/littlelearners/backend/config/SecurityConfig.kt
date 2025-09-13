@@ -20,9 +20,10 @@ class SecurityConfig {
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .csrf { it.disable() }
-            .cors { } // ✅ tells Spring Security: "use the global CORS config (WebConfig)"
+            .cors { }
             .authorizeHttpRequests { auth ->
-                auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // allow preflights
+                auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
                 auth.anyRequest().permitAll()
             }
         return http.build()
