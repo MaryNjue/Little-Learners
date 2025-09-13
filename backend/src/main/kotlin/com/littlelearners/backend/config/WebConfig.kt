@@ -1,3 +1,5 @@
+package com.littlelearners.backend.config
+
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
@@ -8,12 +10,12 @@ class WebConfig : WebMvcConfigurer {
 
     override fun addCorsMappings(registry: CorsRegistry) {
         registry.addMapping("/**")
-            .allowedOriginPatterns(
+            .allowedOrigins(
                 "http://localhost:3000",
                 "http://localhost:8080",
-                "https://*.ngrok-free.app",
                 "https://little-learners-three.vercel.app"
             )
+            .allowedOriginPatterns("https://*.ngrok-free.app") // keep wildcard here
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .allowedHeaders("*")
             .allowCredentials(true)
@@ -21,8 +23,7 @@ class WebConfig : WebMvcConfigurer {
     }
 
     override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
-        // ✅ Serve files under /uploads/** from the file system
         registry.addResourceHandler("/uploads/**")
-            .addResourceLocations("file:uploads/") // folder relative to project root
+            .addResourceLocations("file:uploads/")
     }
 }
