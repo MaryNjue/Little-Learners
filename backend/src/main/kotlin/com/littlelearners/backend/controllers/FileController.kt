@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/api/files")
+@CrossOrigin(origins = ["http://localhost:3000"]) // allow frontend
 class FileController(
     private val fileUploadService: FileUploadService
 ) {

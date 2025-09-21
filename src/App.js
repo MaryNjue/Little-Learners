@@ -142,9 +142,11 @@ function App() {
             Logged in as {user.displayName || user.email || "Student"} (
             {userRole?.toUpperCase()})
           </span>
-          <button onClick={handleLogout} className="logout-button">
-            Logout
-          </button>
+          {userRole !== 'teacher' && (
+            <button onClick={handleLogout} className="logout-button">
+              Logout
+            </button>
+          )}
         </nav>
       </header>
 

@@ -22,9 +22,10 @@ class SecurityConfig {
             .csrf { it.disable() }
             .cors { }
             .authorizeHttpRequests { auth ->
-                auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/uploads/**").permitAll()
-                auth.anyRequest().permitAll()
+                auth
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    .requestMatchers("/api/files/**").permitAll()
+                    .anyRequest().authenticated()
             }
         return http.build()
     }

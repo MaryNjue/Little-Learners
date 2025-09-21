@@ -3,6 +3,7 @@ import axios from 'axios';
 import { ClipboardList, Clock, CheckCircle, Download } from 'lucide-react';
 import '../StudentManager/StudentAssignment.css';
 
+const API_BASE_URL = 'https://little-learners-2i8y.onrender.com';
 
 function StudentAssignments() {
   const [assignments, setAssignments] = useState([]);
@@ -18,7 +19,7 @@ function StudentAssignments() {
 
     console.log("Fetching assignments for studentId:", loggedInStudentId);
 
-    axios.get(`https://little-learners-2i8y.onrender.com/api/assignments/student/${loggedInStudentId}`)
+    axios.get(`${API_BASE_URL}/api/assignments/student/${loggedInStudentId}`)
       .then(res => {
         setAssignments(res.data);
       })
@@ -39,7 +40,6 @@ function StudentAssignments() {
     setIsSubmissionModalOpen(false);
   };
 
-  // Submit assignment
   const handleSubmitAssignment = async (e) => {
     e.preventDefault();
     const fileInput = e.target.submissionFile.files[0];
@@ -50,7 +50,7 @@ function StudentAssignments() {
 
     try {
       await axios.post(
-        `https://little-learners-2i8y.onrender.com/api/assignments/${selectedAssignment.id}/submit?userId=${loggedInStudentId}`,
+        `${API_BASE_URL}/api/assignments/${selectedAssignment.id}/submit?userId=${loggedInStudentId}`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -67,6 +67,11 @@ function StudentAssignments() {
       console.error(err);
       alert("Failed to submit assignment. Try again.");
     }
+  };
+
+  const formatFileUrl = (url) => {
+    if (!url) return '';
+    return url.replace('/image/upload/', '/raw/upload/');
   };
 
   return (
@@ -94,7 +99,7 @@ function StudentAssignments() {
 
               <div className="assignment-actions">
   {a.fileUrl && (
-    <a href={a.fileUrl} target="_blank" rel="noopener noreferrer">
+    <a href={formatFileUrl(a.fileUrl)} target="_blank" rel="noopener noreferrer">
   Download Assignment
 </a>
   )}
@@ -111,7 +116,6 @@ function StudentAssignments() {
         <p className="no-assignments">No assignments assigned yet.</p>
       )}
 
-      {/* Submission Modal */}
       {isSubmissionModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">

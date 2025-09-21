@@ -12,7 +12,7 @@ class FileUploadService(private val cloudinary: Cloudinary) {
             file.bytes,
             mapOf(
                 "folder" to "assignments",
-                "resource_type" to "auto",
+                "resource_type" to "raw",
                 "access_mode" to "public"
             )
         )
