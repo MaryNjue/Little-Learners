@@ -52,7 +52,6 @@ class UserService(
             throw IllegalArgumentException("Invalid username or password.")
         }
 
-        // ✅ If student, fetch fullName from students table
         var studentFullName: String? = null
         if (user.role == UserRole.STUDENT) {
             val student = studentRepository.findByUserId(user.id)
