@@ -132,7 +132,7 @@ function StudentManagement({ loggedInTeacherId, loggedInTeacherUsername }) {
       const basePayload = {
         fullName: formData.get('fullName'),
         regNum: formData.get('regNum'),
-        grade: parseInt(formData.get('grade'), 10),
+        grade: formData.get('grade'),
         gender: formData.get('gender'),
         parentName: formData.get('parentName'),
         performanceScore: parseInt(formData.get('performanceScore'), 10),
