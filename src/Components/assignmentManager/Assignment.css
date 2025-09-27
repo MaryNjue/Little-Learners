@@ -9,6 +9,8 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #333;
+
+    
 }
 
 .main-title {
@@ -119,6 +121,66 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+/* --- NEW: Search/Button Row Layout using Flexbox --- */
+.search-action-row {
+    display: flex;
+    flex-wrap: wrap; /* Allows wrapping on small screens */
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem; /* Gap between search and button */
+    margin-bottom: 1.5rem;
+}
+
+.search-input-container {
+    position: relative;
+    flex-grow: 1; /* Allows it to take available space */
+    max-width: 400px; /* Limits max width for a cleaner look */
+}
+
+.search-input-field {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem; /* Top/Bottom | Right | Left (for icon) */
+    border: 1px solid #dcdcdc;
+    border-radius: 9999px; /* Fully rounded */
+    font-size: 1rem;
+    color: #555;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06); /* Inner shadow for depth */
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.search-input-field:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.search-icon-inside {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #95a5a6;
+    pointer-events: none; /* Allows clicks to pass through to the input */
+    z-index: 10;
+}
+
+.clear-search-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #95a5a6;
+    cursor: pointer;
+    z-index: 10;
+    transition: color 0.2s;
+}
+
+.clear-search-icon:hover {
+    color: #34495e;
+}
+/* --- END NEW STYLES --- */
+
+
 /* --- My Assignments Section --- */
 .my-assignments-section .manage-button {
     background-color: #3498db;
@@ -167,6 +229,23 @@
     transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     border: 1px solid #cce7ff;
     cursor: pointer;
+}
+.create-assignment-button {
+    /* Base style */
+    background-color: #3498db;
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    /* Visual Enhancement and Transitions */
+    transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle initial shadow */
 }
 
 .quick-action-button:hover {
@@ -335,11 +414,12 @@
 }
 
 .modal-close-button {
-    color: #95a5a6;
     background: none;
     border: none;
+    font-size: 1.5rem;
+    color: blue;
     cursor: pointer;
-    transition: color 0.2s ease-in-out;
+    transition: color 0.2s;
 }
 
 .modal-close-button:hover {
@@ -489,4 +569,3 @@
 .confirm-cancel-button:hover {
     background-color: #d5dbdb;
 }
-

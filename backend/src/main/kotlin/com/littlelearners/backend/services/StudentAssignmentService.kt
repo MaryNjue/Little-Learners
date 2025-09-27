@@ -4,6 +4,7 @@ import com.littlelearners.backend.models.StudentAssignment
 import com.littlelearners.backend.repositories.StudentAssignmentRepository
 import com.littlelearners.backend.repositories.StudentRepository
 import com.littlelearners.backend.repositories.AssignmentRepository
+import com.littlelearners.backend.repositories.StudentAnswerRepository
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import java.util.UUID
@@ -12,7 +13,8 @@ import java.util.UUID
 class StudentAssignmentService(
     private val studentAssignmentRepository: StudentAssignmentRepository,
     private val studentRepository: StudentRepository,
-    private val assignmentRepository: AssignmentRepository
+    private val assignmentRepository: AssignmentRepository,
+    private val studentAnswerRepository: StudentAnswerRepository
 ) {
     fun assignStudentToAssignment(
         studentId: UUID,
@@ -67,4 +69,27 @@ class StudentAssignmentService(
         }
         studentAssignmentRepository.deleteById(id)
     }
+
+    fun finishAssignment(studentId: UUID, assignmentId: UUID): StudentAssignment {
+        // Fetch the student assignment
+        val studentAssignment = studentAssignmentRepository.findByStudentIdAndAssignmentId(studentId, assignmentId)
+            ?: throw EntityNotFoundException("StudentAssignment not found for studentId=$studentId, assignmentId=$assignmentId")
+
+        // Fetch answers for this student assignment
+        val answers = studentAnswerRepository.findByStudent_IdAndQuestion_Assignment_Id(studentId, assignmentId)
+
+        // Compute score
+        val totalQuestions = answers.size
+        val correctAnswers = answers.count { it.isCorrect } // <-- replace with actual comparison logic if needed
+        val score = if (totalQuestions > 0) (correctAnswers * 100) / totalQuestions else 0
+
+        // Update assignment status
+        studentAssignment.completionStatus = "COMPLETED"
+        studentAssignment.grade = score
+
+        return studentAssignmentRepository.save(studentAssignment)
+    }
+
+
+
 }

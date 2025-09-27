@@ -163,7 +163,7 @@ function App() {
           loggedInStudentId={user.uid}
           loggedInStudentUsername={
             user.displayName || user.email || "Student"
-          } // ✅ now shows fullName
+          } 
         />
       )}
     </div>
