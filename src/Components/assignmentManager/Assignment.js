@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth } from 'firebase/auth';
-import { Plus, Edit, Trash2, Search, X, Files, Download, ClipboardList } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, Files, Download, ClipboardList, FileText } from 'lucide-react';
 import '../../App.css';
 import '../assignmentManager/Assignment.css';
+import QuestionManager from './QuestionManager'; // <-- NEW: Import the QuestionManager component
 
 const API_BASE_URL = 'https://little-learners-2i8y.onrender.com';
 
@@ -216,6 +217,8 @@ function AssignmentManager() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [assignmentToDelete, setAssignmentToDelete] = useState(null);
+  // NEW STATE: Holds the assignment object when managing questions
+  const [activeAssignmentForQuestions, setActiveAssignmentForQuestions] = useState(null); 
 
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
@@ -245,6 +248,15 @@ function AssignmentManager() {
       fetchAssignments();
     }
   }, [userId]);
+  
+  // NEW HANDLER: Switches view to QuestionManager
+  const handleManageQuestions = (assignment) => {
+    setActiveAssignmentForQuestions(assignment);
+  };
+  
+  const handleBackToAssignments = () => {
+    setActiveAssignmentForQuestions(null);
+  };
 
   const handleAddAssignment = () => {
     setCurrentAssignment(null);
@@ -302,6 +314,18 @@ function AssignmentManager() {
     (assignment.status || '').toLowerCase().includes(searchTerm.toLowerCase())
   ).sort((a, b) => new Date(b.dueDate) - new Date(a.dueDate));
 
+
+  // NEW: CONDITIONAL RENDERING LOGIC
+  if (activeAssignmentForQuestions) {
+    return (
+      <QuestionManager 
+        assignment={activeAssignmentForQuestions} 
+        onBackToAssignments={handleBackToAssignments}
+      />
+    );
+  }
+  // END CONDITIONAL RENDERING
+  
   if (loading) {
     return <div className="p-6 text-center text-lg text-blue-600">Loading assignments...</div>;
   }
@@ -319,7 +343,7 @@ function AssignmentManager() {
           <ClipboardList size={32} className="main-title-icon" /> Assignment Manager
         </h1>
         
-        {/* CORRECTED: Search and Button Row using custom CSS class */}
+        {/* Search and Button Row using custom CSS class */}
         <div className="search-action-row"> 
             
             {/* Search Bar Container */}
@@ -342,7 +366,7 @@ function AssignmentManager() {
             {/* Create Button - Sits on the right */}
             <button
                 onClick={handleAddAssignment}
-                className="create-assignment-button" 
+                className="create-assignment-button flex-shrink-0" 
             >
                 <Plus size={20} /> Create New Assignment
             </button>
@@ -386,6 +410,14 @@ function AssignmentManager() {
                         </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-3">
+                      {/* NEW: Manage Questions Button */}
+                      <button 
+                        onClick={() => handleManageQuestions(assignment)} // Pass the full assignment object
+                        className="table-action-button questions" 
+                        title="Manage Questions"
+                      >
+                        <FileText size={18} />
+                      </button>
                       {/* Using the custom table action button classes */}
                       <button onClick={() => handleEditAssignment(assignment)} className="table-action-button edit" title="Edit Assignment"><Edit size={18} /></button>
                       <button onClick={() => handleOpenConfirmModal(assignment.id)} className="table-action-button delete" title="Delete Assignment"><Trash2 size={18} /></button>
@@ -403,7 +435,7 @@ function AssignmentManager() {
             <div className="text-center py-12 text-gray-500">
               <Files size={40} className="mx-auto mb-4 text-gray-400"/>
               <p className="mb-4">No assignments found.</p>
-              <button onClick={handleAddAssignment} className="my-assignments-section manage-button">
+              <button onClick={handleAddAssignment} className="create-assignment-button">
                 Create a New Assignment
               </button>
             </div>

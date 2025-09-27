@@ -1,5 +1,6 @@
 package com.littlelearners.backend.models
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -18,13 +19,14 @@ data class Question(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assignment_id", nullable = false)
+    @JsonIgnore
     var assignment: Assignment,
 
     @Column(name = "question_text", nullable = false)
     var questionText: String,
 
     @Column(name = "options", nullable = false, columnDefinition = "TEXT")
-    var options: String, // Store as JSON string: ["A","B","C","D"]
+    var options: String,
 
     @Column(name = "correct_answer", nullable = false)
     var correctAnswer: String

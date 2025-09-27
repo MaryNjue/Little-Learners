@@ -7,5 +7,6 @@ import java.util.UUID
 
 @Repository
 interface QuestionRepository : JpaRepository<Question, UUID> {
-    fun findByAssignmentId(assignmentId: UUID): List<Question>
+
+    fun findByAssignment_Id(assignmentId: UUID): List<Question>
 }

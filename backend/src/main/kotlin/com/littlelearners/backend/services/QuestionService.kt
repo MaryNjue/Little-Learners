@@ -26,8 +26,12 @@ class QuestionService(
         return questionRepository.save(question)
     }
 
+
+
     fun getQuestionsByAssignment(assignmentId: UUID): List<Question> =
-        questionRepository.findByAssignmentId(assignmentId)
+        questionRepository.findByAssignment_Id(assignmentId)
+
+
 
     fun getQuestionById(id: UUID): Question =
         questionRepository.findById(id).orElseThrow()
