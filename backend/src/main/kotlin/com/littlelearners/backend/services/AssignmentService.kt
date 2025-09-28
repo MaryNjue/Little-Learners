@@ -108,4 +108,20 @@ class AssignmentService(
         }
         assignmentRepository.deleteById(id)
     }
+
+    // In AssignmentService.kt
+
+// ... add this function
+
+    fun finalizeStudentAssignment(assignmentId: UUID, studentId: UUID) {
+        // 🚨 IMPLEMENTATION REQUIRED:
+        // 1. You should verify that all questions for this assignment have a corresponding StudentAnswer entry
+        //    for this student.
+        // 2. You need a dedicated table/model (e.g., StudentAssignmentStatus) to save the overall status,
+        //    grade, and feedback for the student/assignment pair.
+        // 3. Update the status in that model to 'SUBMITTED_PENDING_GRADE'.
+
+        // For now, assume success and print a log:
+        println("Finalizing assignment $assignmentId for student $studentId.")
+    }
 }

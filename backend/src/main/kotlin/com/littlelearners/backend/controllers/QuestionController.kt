@@ -2,7 +2,6 @@ package com.littlelearners.backend.controllers
 
 import com.littlelearners.backend.dto.QuestionRequest
 import com.littlelearners.backend.dto.QuestionResponse
-import com.littlelearners.backend.models.Question
 import com.littlelearners.backend.services.QuestionService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -19,10 +18,11 @@ class QuestionController(
         return ResponseEntity.ok(questionService.toResponse(saved))
     }
 
-
     @GetMapping("/assignment/{assignmentId}")
-    fun getQuestionsByAssignment(@PathVariable assignmentId: UUID): ResponseEntity<List<Question>> {
-        return ResponseEntity.ok(questionService.getQuestionsByAssignment(assignmentId))
+    fun getQuestionsByAssignment(@PathVariable assignmentId: UUID): ResponseEntity<List<QuestionResponse>> {
+        val questions = questionService.getQuestionsByAssignment(assignmentId)
+        val responses = questions.map { questionService.toResponse(it) }
+        return ResponseEntity.ok(responses)
     }
 
     @DeleteMapping("/{id}")

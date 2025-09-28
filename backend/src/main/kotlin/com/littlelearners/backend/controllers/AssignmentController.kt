@@ -199,4 +199,19 @@ class AssignmentController(
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("message" to "Failed to delete assignment: ${e.message}"))
         }
     }
+
+    // Add this new endpoint
+    @PutMapping("/{assignmentId}/finalize/student/{studentId}")
+    fun finalizeStudentAssignment(
+        @PathVariable assignmentId: UUID,
+        @PathVariable studentId: UUID
+    ): ResponseEntity<Any> {
+        return try {
+            assignmentService.finalizeStudentAssignment(assignmentId, studentId)
+            ResponseEntity.ok(mapOf("message" to "Assignment status finalized"))
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("message" to "Failed to finalize assignment status: ${e.message}"))
+        }
+    }
 }

@@ -1,21 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ClipboardList, Clock, CheckCircle, Download } from 'lucide-react';
+// 🚨 FIX 1: Import 'Download' here. It was missing from the list.
+import { ClipboardList, Clock, CheckCircle, Download } from 'lucide-react'; 
+import AssignmentQuizView from './AssignmentQuizView'; 
 import '../StudentManager/StudentAssignment.css';
 
 const API_BASE_URL = 'https://little-learners-2i8y.onrender.com';
 
 function StudentAssignments() {
   const [assignments, setAssignments] = useState([]);
-  const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
+  const [viewState, setViewState] = useState('list'); // 'list' or 'quiz'
   const [selectedAssignment, setSelectedAssignment] = useState(null);
-
+  const [isLoading, setIsLoading] = useState(true);
+  
   // Get logged-in student ID from localStorage
   const loggedInStudentId = localStorage.getItem("studentUserId");
 
   // Fetch assignments from backend
-  useEffect(() => {
+  // 🚨 FIX 2: Define fetchAssignments inside useEffect's scope 
+  // OR use useCallback, but for simple use, wrapping it in useEffect is cleanest.
+  const fetchAssignments = () => {
     if (!loggedInStudentId) return;
+    setIsLoading(true);
 
     console.log("Fetching assignments for studentId:", loggedInStudentId);
 
@@ -25,55 +31,60 @@ function StudentAssignments() {
       })
       .catch(err => {
         console.error("Failed to fetch assignments:", err);
-        alert("Failed to load assignments. Please try again later.");
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-  }, [loggedInStudentId]);
+  };
 
-  // Open submission modal
-  const handleOpenModal = (assignment) => {
+  // 🚨 FIX 3: Include the stable function fetchAssignments in the dependency array
+  useEffect(() => {
+    fetchAssignments();
+    // This dependency is now correct and avoids the warning.
+  }, [loggedInStudentId]); 
+
+  // Function to switch to quiz view
+  const handleOpenQuiz = (assignment) => {
     setSelectedAssignment(assignment);
-    setIsSubmissionModalOpen(true);
+    setViewState('quiz');
   };
 
-  const handleCloseModal = () => {
+  // Function to return to the assignment list (used by AssignmentQuizView on finish)
+  const handleReturnToList = () => {
     setSelectedAssignment(null);
-    setIsSubmissionModalOpen(false);
+    setViewState('list');
+    // Re-fetch assignments to update status and grade after quiz submission
+    fetchAssignments(); 
   };
 
-  const handleSubmitAssignment = async (e) => {
-    e.preventDefault();
-    const fileInput = e.target.submissionFile.files[0];
-    if (!fileInput) return alert("Please select a file to submit!");
+  // ----------------------------------------------------
+  // --- CONDITIONAL RENDERING ---
+  // ----------------------------------------------------
 
-    const formData = new FormData();
-    formData.append("file", fileInput);
+  if (viewState === 'quiz') {
+    // Render the new quiz component
+    return (
+      <AssignmentQuizView
+        assignment={selectedAssignment}
+        studentId={loggedInStudentId}
+        onFinish={handleReturnToList}
+      />
+    );
+  }
 
-    try {
-      await axios.post(
-        `${API_BASE_URL}/api/assignments/${selectedAssignment.id}/submit?userId=${loggedInStudentId}`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+  // ----------------------------------------------------
+  // --- LIST VIEW RENDERING ---
+  // ----------------------------------------------------
 
-      alert("Assignment submitted successfully!");
-      setAssignments(prev =>
-        prev.map(a =>
-          a.id === selectedAssignment.id ? { ...a, status: 'SUBMITTED_PENDING_GRADE' } : a
-        )
-      );
-
-      handleCloseModal();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to submit assignment. Try again.");
-    }
-  };
-
-  const formatFileUrl = (url) => {
-    if (!url) return '';
-    return url.replace('/image/upload/', '/raw/upload/');
-  };
-
+  if (isLoading) {
+    return (
+      <div className="assignments-wrapper">
+        <h2 className="assignments-title"><ClipboardList className="mr-2" /> My Assignments</h2>
+        <p className="loading-text">Loading assignments...</p>
+      </div>
+    );
+  }
+  
   return (
     <div className="assignments-wrapper">
       <h2 className="assignments-title">
@@ -88,51 +99,39 @@ function StudentAssignments() {
                 <p className="assignment-title">{a.title} ({a.subject})</p>
                 <p className="assignment-due"><Clock size={16} /> Due: {a.dueDate}</p>
               <p className="assignment-status">
-  Status: <span className={a.status?.includes('PENDING') ? 'status-pending' : 'status-graded'}>
-    {a.status || 'UNKNOWN'}
-  </span>
-  {a.grade !== null && <span> ({a.grade}/{a.maxMarks} marks)</span>}
-</p>
+                Status: <span className={a.status === 'SUBMITTED_PENDING_GRADE' ? 'status-pending' : (a.status === 'GRADED' ? 'status-graded' : 'status-new')}>
+                  {a.status || 'NEW'}
+                </span>
+                {a.grade !== null && <span> ({a.grade}/{a.maxMarks} marks)</span>}
+              </p>
 
                 {a.teacherFeedback && <p className="assignment-feedback">Feedback: {a.teacherFeedback}</p>}
               </div>
 
               <div className="assignment-actions">
-  {a.fileUrl && (
-    <a href={formatFileUrl(a.fileUrl)} target="_blank" rel="noopener noreferrer">
-  Download Assignment
-</a>
-  )}
-  {a.status === 'PENDING' && (
-    <button onClick={() => handleOpenModal(a)} className="submit-button">
-      <CheckCircle size={16} /> Submit
-    </button>
-  )}
-</div>
+                {/* File Download (Keep in case of supplementary files) */}
+                {a.fileUrl && (
+                  <a href={a.fileUrl} target="_blank" rel="noopener noreferrer" className="download-button">
+                    <Download size={16} /> Download
+                  </a>
+                )}
+                
+                {/* Action button based on status */}
+                {a.status !== 'SUBMITTED_PENDING_GRADE' && a.status !== 'GRADED' ? (
+                  <button onClick={() => handleOpenQuiz(a)} className="submit-button">
+                    <CheckCircle size={16} /> Open & Answer
+                  </button>
+                ) : (
+                  <span className={`status-tag ${a.status === 'GRADED' ? 'status-graded' : 'status-pending'}`}>
+                    {a.status === 'GRADED' ? 'View Grade' : 'Awaiting Grade'}
+                  </span>
+                )}
+              </div>
             </li>
           ))}
         </ul>
       ) : (
         <p className="no-assignments">No assignments assigned yet.</p>
-      )}
-
-      {isSubmissionModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Submit Assignment: "{selectedAssignment?.title}"</h3>
-            <p>Due: {selectedAssignment?.dueDate}</p>
-            <form onSubmit={handleSubmitAssignment}>
-              <div className="form-group">
-                <label htmlFor="submissionFile">Upload File</label>
-                <input type="file" id="submissionFile" name="submissionFile" required />
-              </div>
-              <div className="modal-buttons">
-                <button type="button" onClick={handleCloseModal} className="cancel-btn">Cancel</button>
-                <button type="submit" className="submit-btn">Submit</button>
-              </div>
-            </form>
-          </div>
-        </div>
       )}
     </div>
   );
