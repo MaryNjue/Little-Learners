@@ -13,7 +13,7 @@ import java.util.UUID
 class AssignmentService(
     private val assignmentRepository: AssignmentRepository,
     private val userRepository: UserRepository,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper // Used for serializing/deserializing assignedStudentIds
 ) {
     fun createAssignment(
         title: String,
@@ -30,13 +30,21 @@ class AssignmentService(
         val teacher = userRepository.findById(teacherId)
             .orElseThrow { EntityNotFoundException("Teacher with ID $teacherId not found") }
 
+        // 🚨 CRITICAL FIX: Ensure assignedTo is correctly set based on business logic,
+        // overriding unreliable input to prevent NULL/incorrect data.
+        val finalAssignedTo = if (assignedStudentIds.isNullOrEmpty()) {
+            "all"
+        } else {
+            "specific"
+        }
+
         val assignment = Assignment(
             title = title,
             description = description,
             dueDate = dueDate,
             teacher = teacher,
             assignedStudentIds = assignedStudentIds?.let { objectMapper.writeValueAsString(it) },
-            assignedTo = assignedTo,
+            assignedTo = finalAssignedTo, // Use the reliably derived value
             automatedConfig = automatedConfig,
             fileUrl = fileUrl,
             maxMarks = maxMarks,
@@ -68,11 +76,18 @@ class AssignmentService(
         userRepository.findById(teacherId)
             .orElseThrow { EntityNotFoundException("Teacher with ID $teacherId not found") }
 
+        // 🚨 CRITICAL FIX: Apply the same reliable logic during updates.
+        val finalAssignedTo = if (assignedStudentIds.isNullOrEmpty()) {
+            "all"
+        } else {
+            "specific"
+        }
+
         existingAssignment.title = title
         existingAssignment.description = description
         existingAssignment.dueDate = dueDate
         existingAssignment.assignedStudentIds = assignedStudentIds?.let { objectMapper.writeValueAsString(it) }
-        existingAssignment.assignedTo = assignedTo
+        existingAssignment.assignedTo = finalAssignedTo // Use the reliably derived value
         existingAssignment.automatedConfig = automatedConfig
         existingAssignment.fileUrl = fileUrl
         existingAssignment.maxMarks = maxMarks
@@ -82,17 +97,8 @@ class AssignmentService(
     }
 
     fun getAssignmentsForStudent(studentId: UUID): List<Assignment> {
-        // Fetch all assignments
-        val allAssignments = assignmentRepository.findAll()
-
-        return allAssignments.filter { assignment ->
-            val assignedIds = assignment.assignedStudentIds?.let {
-                objectMapper.readValue(it, Array<UUID>::class.java).toList()
-            } ?: emptyList()
-
-            // Return assignments either for "all" students or specifically assigned to this student
-            assignment.assignedTo == "all" || assignedIds.contains(studentId)
-        }
+        // This relies on the custom @Query method in AssignmentRepository.kt
+        return assignmentRepository.findAssignedAssignments(studentId)
     }
 
 
