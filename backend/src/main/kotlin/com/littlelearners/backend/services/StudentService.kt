@@ -107,5 +107,10 @@ class StudentService(
 
         studentRepository.delete(student) // user will also be deleted
     }
+
+    fun getStudentByUserId(userId: UUID): Student? {
+        return studentRepository.findByUserId(userId)
+    }
+
 }
 

@@ -198,4 +198,24 @@ class StudentController(
                 .body(mapOf("message" to "Failed to delete student: ${e.message}"))
         }
     }
+
+    // Get the Student ID associated with a given User ID
+    // Get the Student ID associated with a given User ID
+    @GetMapping("/me/student")
+    fun getMyStudentId(@RequestParam userId: UUID): ResponseEntity<Any> {
+        return try {
+            val student = studentService.getStudentByUserId(userId)
+                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(mapOf("message" to "Student not found for user $userId"))
+
+            ResponseEntity.ok(mapOf("studentId" to student.id))
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("message" to "Failed to fetch Student ID: ${e.message}"))
+        }
+    }
+
+
+
+
 }

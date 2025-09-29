@@ -5,33 +5,34 @@ import com.littlelearners.backend.dto.AssignmentRequest
 import com.littlelearners.backend.dto.AssignmentResponse
 import com.littlelearners.backend.services.AssignmentService
 import com.littlelearners.backend.services.FileUploadService
+import com.littlelearners.backend.services.StudentAssignmentService
+import com.littlelearners.backend.repositories.StudentAssignmentRepository
 import com.littlelearners.backend.services.UserService
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
-import java.util.UUID
+import java.util.*
 
 @RestController
 @RequestMapping("/api/assignments")
 class AssignmentController(
     private val assignmentService: AssignmentService,
     private val userService: UserService,
+    private val studentAssignmentService: StudentAssignmentService,
+    private val studentAssignmentRepository: StudentAssignmentRepository,
     private val objectMapper: ObjectMapper,
     private val fileUploadService: FileUploadService
 ) {
 
-
+    // -------------------------------
+    // File Upload
+    // -------------------------------
     @PostMapping("/upload-file")
     fun uploadAssignmentFile(@RequestParam("file") file: MultipartFile): ResponseEntity<Any> {
         return try {
-            // ✅ Call Cloudinary service instead of saving locally
             val fileUrl = fileUploadService.uploadFile(file)
-
             ResponseEntity.ok(mapOf("fileUrl" to fileUrl))
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -39,9 +40,9 @@ class AssignmentController(
         }
     }
 
-
-
-
+    // -------------------------------
+    // Create Assignment
+    // -------------------------------
     @PostMapping
     fun createAssignment(@RequestBody request: AssignmentRequest): ResponseEntity<Any> {
         return try {
@@ -75,13 +76,15 @@ class AssignmentController(
                 assignedStudentIds = request.assignedStudentIds
             )
             ResponseEntity.status(HttpStatus.CREATED).body(response)
-        } catch (e: EntityNotFoundException) {
-            ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("message" to e.message))
         } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("message" to "Failed to create assignment: ${e.message}"))
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("message" to "Failed to create assignment: ${e.message}"))
         }
     }
 
+    // -------------------------------
+    // Get assignments by teacher
+    // -------------------------------
     @GetMapping("/teacher/{firebaseUid}")
     fun getAssignmentsByTeacher(@PathVariable firebaseUid: String): ResponseEntity<Any> {
         return try {
@@ -108,20 +111,24 @@ class AssignmentController(
                 )
             }
             ResponseEntity.ok(responses)
-        } catch (e: EntityNotFoundException) {
-            ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("message" to e.message))
         } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("message" to "Failed to fetch assignments: ${e.message}"))
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("message" to "Failed to fetch assignments: ${e.message}"))
         }
     }
 
+    // -------------------------------
+    // Get assignments for a student (includes status + grade)
+    // -------------------------------
     @GetMapping("/student/{studentId}")
     fun getAssignmentsForStudent(@PathVariable studentId: UUID): ResponseEntity<Any> {
         return try {
-            // Fetch assignments visible to this student
             val assignments = assignmentService.getAssignmentsForStudent(studentId)
 
             val responses = assignments.map { assignment ->
+                val studentAssignment = studentAssignmentRepository
+                    .findByStudentIdAndAssignmentId(studentId, assignment.id!!)
+
                 AssignmentResponse(
                     id = assignment.id!!,
                     title = assignment.title,
@@ -135,7 +142,10 @@ class AssignmentController(
                     assignedTo = assignment.assignedTo,
                     assignedStudentIds = assignment.assignedStudentIds?.let {
                         objectMapper.readValue(it, Array<UUID>::class.java).toList()
-                    }
+                    },
+                    status = studentAssignment?.completionStatus ?: "PENDING",
+                    grade = studentAssignment?.grade,
+                    teacherFeedback = null // we can extend later
                 )
             }
 
@@ -146,7 +156,32 @@ class AssignmentController(
         }
     }
 
+    // -------------------------------
+    // Finalize Student Assignment (compute score + mark complete)
+    // -------------------------------
+    @PutMapping("/{assignmentId}/finalize/student/{studentId}")
+    fun finalizeStudentAssignment(
+        @PathVariable assignmentId: UUID,
+        @PathVariable studentId: UUID
+    ): ResponseEntity<Any> {
+        return try {
+            val result = studentAssignmentService.finishAssignment(studentId, assignmentId)
+            ResponseEntity.ok(
+                mapOf(
+                    "message" to "Assignment finalized",
+                    "status" to result.completionStatus,
+                    "grade" to result.grade
+                )
+            )
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("message" to "Failed to finalize assignment: ${e.message}"))
+        }
+    }
 
+    // -------------------------------
+    // Update assignment
+    // -------------------------------
     @PutMapping("/{id}")
     fun updateAssignment(@PathVariable id: UUID, @RequestBody request: AssignmentRequest): ResponseEntity<Any> {
         return try {
@@ -181,37 +216,23 @@ class AssignmentController(
                 assignedStudentIds = request.assignedStudentIds
             )
             ResponseEntity.ok(response)
-        } catch (e: EntityNotFoundException) {
-            ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("message" to e.message))
         } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("message" to "Failed to update assignment: ${e.message}"))
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("message" to "Failed to update assignment: ${e.message}"))
         }
     }
 
+    // -------------------------------
+    // Delete assignment
+    // -------------------------------
     @DeleteMapping("/{id}")
     fun deleteAssignment(@PathVariable id: UUID): ResponseEntity<Any> {
         return try {
             assignmentService.deleteAssignment(id)
             ResponseEntity.status(HttpStatus.NO_CONTENT).build()
-        } catch (e: EntityNotFoundException) {
-            ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("message" to e.message))
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("message" to "Failed to delete assignment: ${e.message}"))
-        }
-    }
-
-    // Add this new endpoint
-    @PutMapping("/{assignmentId}/finalize/student/{studentId}")
-    fun finalizeStudentAssignment(
-        @PathVariable assignmentId: UUID,
-        @PathVariable studentId: UUID
-    ): ResponseEntity<Any> {
-        return try {
-            assignmentService.finalizeStudentAssignment(assignmentId, studentId)
-            ResponseEntity.ok(mapOf("message" to "Assignment status finalized"))
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(mapOf("message" to "Failed to finalize assignment status: ${e.message}"))
+                .body(mapOf("message" to "Failed to delete assignment: ${e.message}"))
         }
     }
 }

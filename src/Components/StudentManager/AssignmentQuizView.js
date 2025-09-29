@@ -1,185 +1,169 @@
-// File: src/components/StudentManager/AssignmentQuizView.js
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ChevronLeft, CheckCircle } from 'lucide-react';
+import { ChevronLeft, CheckCircle, XCircle, ArrowRight, PartyPopper } from 'lucide-react';
+import './AssignmentQuizView.css';
 
-const API_BASE_URL = 'https://little-learners-2i8y.onrender.com';
+const API_BASE_URL = 'http://localhost:8080';
 
-function AssignmentQuizView({ assignment, studentId, onFinish }) {
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('studentToken'); 
+  if (token) {
+    return { headers: { 'Authorization': `Bearer ${token}` } };
+  }
+  return {};
+};
+
+function AssignmentQuizView({ assignment, onFinish }) {
+  const [studentId, setStudentId] = useState(null);
   const [questions, setQuestions] = useState([]);
-  const [currentAnswers, setCurrentAnswers] = useState({}); // { questionId: chosenAnswer }
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentAnswers, setCurrentAnswers] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [feedback, setFeedback] = useState(null);
+  const [score, setScore] = useState(0);
 
-  // 1. Fetch Questions and Previous Answers
   useEffect(() => {
-    setIsLoading(true);
-    const fetchQuizData = async () => {
+    if (!assignment?.id) {
+      setIsLoading(false);
+      return;
+    }
+
+    const loadQuizData = async () => {
+      setIsLoading(true);
       try {
-        // Fetch Questions for the Assignment
-        const questionRes = await axios.get(`${API_BASE_URL}/api/questions/assignment/${assignment.id}`);
+        const userId = localStorage.getItem("studentUserId");
+        const studentRes = await axios.get(
+          `${API_BASE_URL}/api/students/me/student?userId=${userId}`,
+          getAuthHeaders()
+        );
+        const fetchedStudentId = studentRes.data.studentId;
+        setStudentId(fetchedStudentId);
+
+        const questionRes = await axios.get(
+          `${API_BASE_URL}/api/questions/assignment/${assignment.id}`,
+          getAuthHeaders()
+        );
         setQuestions(questionRes.data);
 
-        // Fetch Previously Submitted Answers (if any)
-        const answersRes = await axios.get(
-            `${API_BASE_URL}/api/answers/student/${studentId}/assignment/${assignment.id}`
-        );
-
-        const submittedAnswers = answersRes.data.reduce((acc, answer) => {
-          // Note: studentAnswerResponse may need to contain questionId, assuming it does.
-          acc[answer.questionId] = {
-            chosenAnswer: answer.chosenAnswer,
-            isCorrect: answer.isCorrect,
-            submitted: true, // Custom flag to lock the answer
-          };
-          return acc;
-        }, {});
-        
-        setCurrentAnswers(submittedAnswers);
-        
-        // If the number of submitted answers equals the number of questions, mark as submitted
-        if (Object.keys(submittedAnswers).length === questionRes.data.length && questionRes.data.length > 0) {
-            setIsSubmitted(true);
-        }
-
       } catch (err) {
-        console.error("Failed to load quiz data:", err);
-        alert("Failed to load quiz data.");
+        console.error("Failed to load quiz data:", err.response || err);
+        alert("Failed to load quiz data. Check student and assignment IDs.");
       } finally {
-          setIsLoading(false);
+        setIsLoading(false);
       }
     };
 
-    fetchQuizData();
-  }, [assignment.id, studentId]);
+    loadQuizData();
+  }, [assignment?.id]);
 
-  // 2. Handle Individual Answer Submission
-  const handleAnswerChange = async (questionId, chosenAnswer) => {
-    // Prevent changing answer if already submitted for this question
-    if (currentAnswers[questionId]?.submitted || isSubmitted) return; 
+  const handleAnswer = async (questionId, chosenAnswer) => {
+    if (!studentId) return;
 
-    // Optimistic UI update
-    setCurrentAnswers(prev => ({
-        ...prev,
-        [questionId]: { chosenAnswer, submitted: false, isCorrect: null }
-    }));
+    const question = questions[currentIndex];
 
     try {
-        // Submit the answer immediately
-        const res = await axios.post(`${API_BASE_URL}/api/answers`, {
-            studentId,
-            questionId,
-            chosenAnswer
+      const res = await axios.post(
+        `${API_BASE_URL}/api/answers`,
+        { studentId, questionId, chosenAnswer },
+        getAuthHeaders()
+      );
+
+      const isCorrect = res.data.isCorrect;
+
+      setCurrentAnswers(prev => ({
+        ...prev,
+        [questionId]: { chosenAnswer, isCorrect, submitted: true }
+      }));
+
+      if (isCorrect) {
+        setScore(prev => prev + 1);
+        setFeedback({ correct: true, message: "✅ Correct! Well done!" });
+      } else {
+        setFeedback({
+          correct: false,
+          message: `❌ Incorrect. The correct answer was: ${question.correctAnswer}`
         });
-
-        // Update state with server's result (isCorrect flag)
-        setCurrentAnswers(prev => ({
-            ...prev,
-            [questionId]: { ...prev[questionId], isCorrect: res.data.isCorrect, submitted: true }
-        }));
-
-    } catch (err) {
-        console.error("Failed to submit answer:", err);
-        // Rollback optimistic update if submission fails
-        setCurrentAnswers(prev => {
-             const newState = { ...prev };
-             delete newState[questionId];
-             return newState;
-        });
-        alert("Failed to save answer. Try again.");
-    }
-  };
-  
-  // 3. Handle Final Submission
-  const handleSubmitQuiz = () => {
-      const answeredCount = Object.keys(currentAnswers).filter(
-          qid => currentAnswers[qid].submitted
-      ).length;
-
-      if (answeredCount !== questions.length) {
-          return alert(`You must answer all ${questions.length} questions before submitting. You have answered ${answeredCount}.`);
       }
 
-      // 🚨 Backend requirement: You need a final endpoint to update the overall assignment status.
-      // Assuming a PUT endpoint exists to finalize the assignment status.
-      
-      axios.put(`${API_BASE_URL}/api/assignments/${assignment.id}/finalize/student/${studentId}`)
-          .then(() => {
-              alert("Quiz submitted and finalized!");
-              setIsSubmitted(true);
-              // Wait a moment then return to list
-              setTimeout(onFinish, 1500); 
-          })
-          .catch(err => {
-              console.error("Failed to finalize quiz:", err);
-              alert("Failed to finalize submission. Please try again.");
-          });
+    } catch (err) {
+      console.error("Failed to submit answer:", err.response || err);
+      alert("Failed to save answer. Check backend logs.");
+    }
+  };
+
+  const handleNext = () => {
+    if (currentIndex + 1 < questions.length) {
+      setCurrentIndex(prev => prev + 1);
+      setFeedback(null);
+    } else {
+      setIsSubmitted(true);
+    }
   };
 
   if (isLoading) return <div className="assignments-wrapper">Loading Quiz...</div>;
   if (!questions.length) return <div className="assignments-wrapper">No questions found for this assignment.</div>;
 
-  const answeredCount = Object.keys(currentAnswers).filter(
-    qid => currentAnswers[qid].submitted
-  ).length;
+  if (isSubmitted) {
+    return (
+      <div className="quiz-finished">
+        <PartyPopper size={50} className="text-yellow-500 mb-4" />
+        <h2>🎉 Quiz Completed!</h2>
+        <p>You scored <strong>{score}</strong> out of <strong>{questions.length}</strong></p>
+        <button onClick={onFinish} className="quiz-button back-btn">
+          Back to Assignments
+        </button>
+      </div>
+    );
+  }
+
+  const question = questions[currentIndex];
+  const answerState = currentAnswers[question.id];
 
   return (
     <div className="assignments-wrapper quiz-view">
       <button onClick={onFinish} className="back-button">
         <ChevronLeft size={20} /> Back to Assignments
       </button>
+
       <h2 className="assignments-title">{assignment.title} Quiz</h2>
       <p className="quiz-status">
-          Progress: {answeredCount} / {questions.length} answered.
+        Question {currentIndex + 1} of {questions.length}
       </p>
 
-      <ul className="questions-list">
-        {questions.map(q => {
-          const answerState = currentAnswers[q.id];
-          const isAnswered = answerState?.submitted;
-          const isCorrect = answerState?.isCorrect;
+      <div className="question-card active">
+        <p className="question-text">{question.questionText}</p>
 
-          return (
-            <li key={q.id} className={`question-card ${isAnswered ? (isCorrect ? 'correct' : 'wrong') : ''}`}>
-              <p className="question-text">{q.questionText}</p>
-              
-              <div className="options-group">
-                {/* q.options is a list of strings from the backend response */}
-                {q.options.map(option => (
-                  <label key={option} className={`option-label ${answerState?.chosenAnswer === option ? 'selected' : ''}`}>
-                    <input
-                      type="radio"
-                      name={`question-${q.id}`}
-                      value={option}
-                      checked={answerState?.chosenAnswer === option}
-                      onChange={() => handleAnswerChange(q.id, option)}
-                      disabled={isAnswered || isSubmitted} // Disable once answered or quiz is submitted
-                    />
-                    {option}
-                  </label>
-                ))}
-              </div>
+        <div className="options-group">
+          {question.options.map(option => (
+            <button
+              key={option}
+              className={`option-btn ${
+                answerState?.chosenAnswer === option
+                  ? answerState.isCorrect
+                    ? "correct"
+                    : "incorrect"
+                  : ""
+              }`}
+              onClick={() => handleAnswer(question.id, option)}
+              disabled={!!answerState}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
 
-              {isAnswered && (
-                  <p className={`answer-feedback ${isCorrect ? 'correct-text' : 'wrong-text'}`}>
-                      {isCorrect ? 'Correct!' : 'Incorrect.'}
-                  </p>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+        {feedback && (
+          <div className={`answer-feedback ${feedback.correct ? 'correct-text' : 'wrong-text'}`}>
+            {feedback.correct ? <CheckCircle size={20} /> : <XCircle size={20} />} {feedback.message}
+          </div>
+        )}
 
-      <div className="quiz-actions">
-        <button
-          onClick={handleSubmitQuiz}
-          className="submit-quiz-button"
-          disabled={isSubmitted || answeredCount !== questions.length}
-        >
-          <CheckCircle size={20} /> Finalize and Submit Quiz ({answeredCount}/{questions.length})
-        </button>
-        {isSubmitted && <p className="status-graded">Quiz Finalized!</p>}
+        {feedback && (
+          <button onClick={handleNext} className="next-btn">
+            Next <ArrowRight size={18} />
+          </button>
+        )}
       </div>
     </div>
   );

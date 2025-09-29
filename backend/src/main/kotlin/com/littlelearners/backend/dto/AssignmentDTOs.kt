@@ -16,6 +16,7 @@ data class AssignmentRequest(
     val assignedStudentIds: List<UUID>?
 )
 
+
 data class AssignmentResponse(
     val id: UUID,
     val title: String,
@@ -27,6 +28,8 @@ data class AssignmentResponse(
     val maxMarks: Int?,
     val fileUrl: String?,
     val assignedTo: String,
-    val assignedStudentIds: List<UUID>?
+    val assignedStudentIds: List<UUID>?,
+    val status: String? = null,
+    val grade: Int? = null,
+    val teacherFeedback: String? = null
 )
-
