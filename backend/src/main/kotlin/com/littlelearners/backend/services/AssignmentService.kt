@@ -13,8 +13,7 @@ import java.util.UUID
 class AssignmentService(
     private val assignmentRepository: AssignmentRepository,
     private val userRepository: UserRepository,
-    private val objectMapper: ObjectMapper,
-    private val studentAssignmentService: StudentAssignmentService // FIX 1: Inject StudentAssignmentService
+    private val objectMapper: ObjectMapper // Used for serializing/deserializing assignedStudentIds
 ) {
     fun createAssignment(
         title: String,
@@ -44,27 +43,13 @@ class AssignmentService(
             dueDate = dueDate,
             teacher = teacher,
             assignedStudentIds = assignedStudentIds?.let { objectMapper.writeValueAsString(it) },
-            assignedTo = finalAssignedTo,
+            assignedTo = finalAssignedTo, // Use the reliably derived value
             automatedConfig = automatedConfig,
             fileUrl = fileUrl,
             maxMarks = maxMarks,
             subject = subject
         )
-        val savedAssignment = assignmentRepository.save(assignment)
-
-        // CORE FIX: Create StudentAssignment entries immediately upon creation
-        if (finalAssignedTo == "specific" && !assignedStudentIds.isNullOrEmpty()) {
-            assignedStudentIds.forEach { studentId ->
-                try {
-                    studentAssignmentService.assignStudentToAssignment(studentId, savedAssignment.id)
-                } catch (e: Exception) {
-                    println("Warning: Could not assign assignment ${savedAssignment.id} to specific student $studentId: ${e.message}")
-                }
-            }
-        }
-        // If 'assignedTo' can be "all", fetch all student IDs here and call assignStudentToAssignment.
-
-        return savedAssignment
+        return assignmentRepository.save(assignment)
     }
 
     fun getAssignmentsByTeacherId(teacherId: UUID): List<Assignment> {
@@ -90,6 +75,7 @@ class AssignmentService(
         userRepository.findById(teacherId)
             .orElseThrow { EntityNotFoundException("Teacher with ID $teacherId not found") }
 
+        // 🚨 CRITICAL FIX: Apply the same reliable logic during updates.
         val finalAssignedTo = if (assignedStudentIds.isNullOrEmpty()) {
             "all"
         } else {
@@ -100,7 +86,7 @@ class AssignmentService(
         existingAssignment.description = description
         existingAssignment.dueDate = dueDate
         existingAssignment.assignedStudentIds = assignedStudentIds?.let { objectMapper.writeValueAsString(it) }
-        existingAssignment.assignedTo = finalAssignedTo
+        existingAssignment.assignedTo = finalAssignedTo // Use the reliably derived value
         existingAssignment.automatedConfig = automatedConfig
         existingAssignment.fileUrl = fileUrl
         existingAssignment.maxMarks = maxMarks
@@ -110,8 +96,10 @@ class AssignmentService(
     }
 
     fun getAssignmentsForStudent(studentId: UUID): List<Assignment> {
+        // This relies on the custom @Query method in AssignmentRepository.kt
         return assignmentRepository.findAssignedAssignments(studentId)
     }
+
 
     fun deleteAssignment(id: UUID) {
         if (!assignmentRepository.existsById(id)) {
@@ -120,14 +108,19 @@ class AssignmentService(
         assignmentRepository.deleteById(id)
     }
 
-    // Helper function required by AssignmentController to parse IDs
-    fun getAssignedStudentIdsAsList(assignedStudentIdsJson: String?): List<UUID>? {
-        return assignedStudentIdsJson?.let {
-            try {
-                objectMapper.readValue(it, object : com.fasterxml.jackson.core.type.TypeReference<List<UUID>>() {})
-            } catch (e: Exception) {
-                null
-            }
-        }
+    // In AssignmentService.kt
+
+// ... add this function
+
+    fun finalizeStudentAssignment(assignmentId: UUID, studentId: UUID) {
+        // 🚨 IMPLEMENTATION REQUIRED:
+        // 1. You should verify that all questions for this assignment have a corresponding StudentAnswer entry
+        //    for this student.
+        // 2. You need a dedicated table/model (e.g., StudentAssignmentStatus) to save the overall status,
+        //    grade, and feedback for the student/assignment pair.
+        // 3. Update the status in that model to 'SUBMITTED_PENDING_GRADE'.
+
+        // For now, assume success and print a log:
+        println("Finalizing assignment $assignmentId for student $studentId.")
     }
 }
