@@ -57,6 +57,7 @@ function AssignmentQuizView({ assignment, onFinish }) {
     loadQuizData();
   }, [assignment?.id]);
 
+  // Submit a single answer
   const handleAnswer = async (questionId, chosenAnswer) => {
     if (!studentId) return;
 
@@ -92,12 +93,26 @@ function AssignmentQuizView({ assignment, onFinish }) {
     }
   };
 
+  // Move to next question
   const handleNext = () => {
     if (currentIndex + 1 < questions.length) {
       setCurrentIndex(prev => prev + 1);
       setFeedback(null);
-    } else {
+    }
+  };
+
+  // Finalize assignment
+  const handleSubmit = async () => {
+    try {
+      await axios.put(
+        `${API_BASE_URL}/api/assignments/${assignment.id}/finalize/student/${studentId}`,
+        {},
+        getAuthHeaders()
+      );
       setIsSubmitted(true);
+    } catch (err) {
+      console.error("Failed to finalize assignment:", err.response || err);
+      alert("Error finalizing assignment. Please try again.");
     }
   };
 
@@ -160,8 +175,15 @@ function AssignmentQuizView({ assignment, onFinish }) {
         )}
 
         {feedback && (
-          <button onClick={handleNext} className="next-btn">
-            Next <ArrowRight size={18} />
+          <button
+            onClick={currentIndex + 1 < questions.length ? handleNext : handleSubmit}
+            className="next-btn"
+          >
+            {currentIndex + 1 < questions.length ? (
+              <>Next <ArrowRight size={18} /></>
+            ) : (
+              <>Submit <CheckCircle size={18} /></>
+            )}
           </button>
         )}
       </div>

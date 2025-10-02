@@ -19,14 +19,13 @@ class StudentAssignmentService(
     fun assignStudentToAssignment(
         studentId: UUID,
         assignmentId: UUID,
-        completionStatus: String = "PENDING" // Default status
+        completionStatus: String = "PENDING"
     ): StudentAssignment {
         val student = studentRepository.findById(studentId)
             .orElseThrow { EntityNotFoundException("Student with ID $studentId not found") }
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment with ID $assignmentId not found") }
 
-        // Check if this assignment is already linked to this student
         val existing = studentAssignmentRepository.findByStudentIdAndAssignmentId(studentId, assignmentId)
         if (existing != null) {
             throw IllegalArgumentException("Student ${student.fullName} is already assigned to assignment ${assignment.title}")
@@ -36,7 +35,7 @@ class StudentAssignmentService(
             student = student,
             assignment = assignment,
             completionStatus = completionStatus,
-            grade = null // <--- ADD THIS LINE to explicitly pass null for grade
+            grade = null
         )
         return studentAssignmentRepository.save(studentAssignment)
     }
@@ -58,7 +57,7 @@ class StudentAssignmentService(
             .orElseThrow { EntityNotFoundException("Student Assignment with ID $id not found") }
 
         existingStudentAssignment.completionStatus = newStatus
-        existingStudentAssignment.grade = grade // Update grade if provided
+        existingStudentAssignment.grade = grade
 
         return studentAssignmentRepository.save(existingStudentAssignment)
     }
@@ -71,25 +70,18 @@ class StudentAssignmentService(
     }
 
     fun finishAssignment(studentId: UUID, assignmentId: UUID): StudentAssignment {
-        // Fetch the student assignment
         val studentAssignment = studentAssignmentRepository.findByStudentIdAndAssignmentId(studentId, assignmentId)
             ?: throw EntityNotFoundException("StudentAssignment not found for studentId=$studentId, assignmentId=$assignmentId")
 
-        // Fetch answers for this student assignment
         val answers = studentAnswerRepository.findByStudent_IdAndQuestion_Assignment_Id(studentId, assignmentId)
 
-        // Compute score
         val totalQuestions = answers.size
-        val correctAnswers = answers.count { it.isCorrect } // <-- replace with actual comparison logic if needed
+        val correctAnswers = answers.count { it.isCorrect }
         val score = if (totalQuestions > 0) (correctAnswers * 100) / totalQuestions else 0
 
-        // Update assignment status
         studentAssignment.completionStatus = "COMPLETED"
         studentAssignment.grade = score
 
         return studentAssignmentRepository.save(studentAssignment)
     }
-
-
-
 }
