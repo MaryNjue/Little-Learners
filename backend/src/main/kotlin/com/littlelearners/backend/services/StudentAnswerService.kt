@@ -27,6 +27,7 @@ class StudentAnswerService(
         val answer = StudentAnswer(
             student = student,
             question = question,
+            assignment = question.assignment,
             chosenAnswer = chosenAnswer,
             isCorrect = question.correctAnswer == chosenAnswer
         )

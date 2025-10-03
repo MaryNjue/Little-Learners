@@ -19,10 +19,17 @@ data class StudentAnswer(
     var question: Question,
 
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assignment_id", nullable = false)
+    var assignment: Assignment,
+
+
 
     @Column(name = "chosen_answer", nullable = false)
     var chosenAnswer: String,
 
     @Column(name = "is_correct", nullable = false)
     var isCorrect: Boolean
+
+
 )

@@ -61,5 +61,9 @@ data class Assignment(
     @OneToMany(mappedBy = "assignment", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var studentAssignments: MutableList<StudentAssignment> = mutableListOf(),
 
+    @OneToMany(mappedBy = "assignment", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var answers: MutableList<StudentAnswer> = mutableListOf()
+
+
 
 )
