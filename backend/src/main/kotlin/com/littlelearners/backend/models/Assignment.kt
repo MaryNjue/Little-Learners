@@ -51,5 +51,17 @@ data class Assignment(
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now()
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
+
+    // ✅ Cascade delete all questions when assignment is deleted
+    @OneToMany(mappedBy = "assignment", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var questions: MutableList<Question> = mutableListOf(),
+
+    // ✅ Cascade delete student assignments
+    @OneToMany(mappedBy = "assignment", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var studentAssignments: MutableList<StudentAssignment> = mutableListOf(),
+
+    // ✅ Cascade delete answers directly linked to assignment
+    @OneToMany(mappedBy = "assignment", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var answers: MutableList<StudentAnswer> = mutableListOf()
 )

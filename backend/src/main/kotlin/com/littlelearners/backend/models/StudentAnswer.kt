@@ -1,12 +1,6 @@
 package com.littlelearners.backend.models
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import java.util.UUID
 
 @Entity
@@ -23,6 +17,11 @@ data class StudentAnswer(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
     var question: Question,
+
+    // ✅ New direct link to Assignment for cascade delete
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assignment_id", nullable = false)
+    var assignment: Assignment,
 
     @Column(name = "chosen_answer", nullable = false)
     var chosenAnswer: String,
