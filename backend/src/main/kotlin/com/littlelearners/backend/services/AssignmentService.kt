@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.littlelearners.backend.models.Assignment
 import com.littlelearners.backend.models.StudentAssignment
 import com.littlelearners.backend.repositories.AssignmentRepository
+import com.littlelearners.backend.repositories.StudentAnswerRepository
 import com.littlelearners.backend.repositories.StudentAssignmentRepository
 import com.littlelearners.backend.repositories.StudentRepository
 import com.littlelearners.backend.repositories.UserRepository
@@ -18,6 +19,7 @@ class AssignmentService(
     private val userRepository: UserRepository,
     private val studentRepository: StudentRepository,
     private val studentAssignmentRepository: StudentAssignmentRepository,
+    private val studentAnswerRepository: StudentAnswerRepository,
     private val objectMapper: ObjectMapper
 ) {
     fun createAssignment(
@@ -154,14 +156,19 @@ class AssignmentService(
     }
 
     fun deleteAssignment(id: UUID) {
-        if (!assignmentRepository.existsById(id)) {
-            throw EntityNotFoundException("Assignment with ID $id not found")
-        }
-        // Delete related StudentAssignments too
-        studentAssignmentRepository.findAll()
-            .filter { it.assignment.id == id }
-            .forEach { studentAssignmentRepository.delete(it) }
+        val assignment = assignmentRepository.findById(id)
+            .orElseThrow { EntityNotFoundException("Assignment with ID $id not found") }
 
-        assignmentRepository.deleteById(id)
+        // Delete all answers linked to this assignment's questions
+        assignment.questions.forEach { question ->
+            studentAnswerRepository.deleteByQuestion_Id(question.id) // <-- use instance, not class
+        }
+
+        // Delete related StudentAssignments (cascade is optional if mapped)
+        assignment.studentAssignments.forEach { studentAssignmentRepository.delete(it) }
+
+        // Finally, delete the assignment itself
+        assignmentRepository.delete(assignment)
     }
+
 }

@@ -61,7 +61,5 @@ data class Assignment(
     @OneToMany(mappedBy = "assignment", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var studentAssignments: MutableList<StudentAssignment> = mutableListOf(),
 
-    // ✅ Cascade delete answers directly linked to assignment
-    @OneToMany(mappedBy = "assignment", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
-    var answers: MutableList<StudentAnswer> = mutableListOf()
+
 )

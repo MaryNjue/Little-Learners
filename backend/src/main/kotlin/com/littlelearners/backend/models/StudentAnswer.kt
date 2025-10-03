@@ -18,10 +18,7 @@ data class StudentAnswer(
     @JoinColumn(name = "question_id", nullable = false)
     var question: Question,
 
-    // ✅ New direct link to Assignment for cascade delete
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assignment_id", nullable = false)
-    var assignment: Assignment,
+
 
     @Column(name = "chosen_answer", nullable = false)
     var chosenAnswer: String,
