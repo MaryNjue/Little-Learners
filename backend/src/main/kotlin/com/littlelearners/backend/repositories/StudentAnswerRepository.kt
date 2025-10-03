@@ -12,4 +12,7 @@ interface StudentAnswerRepository : JpaRepository<StudentAnswer, UUID> {
         studentId: UUID,
         assignmentId: UUID
     ): List<StudentAnswer>
+
+    fun findByQuestion_Assignment_Id(assignmentId: UUID): List<StudentAnswer>
+
 }

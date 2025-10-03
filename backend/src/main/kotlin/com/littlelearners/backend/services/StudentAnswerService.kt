@@ -47,4 +47,27 @@ class StudentAnswerService(
             studentName = sa.student.fullName
         )
     }
+
+    fun getAllStudentAnswersForAssignment(assignmentId: UUID): List<Map<String, Any>> {
+        // Fetch all answers for this assignment
+        val allAnswers = studentAnswerRepository.findByQuestion_Assignment_Id(assignmentId)
+
+        // Group answers by student
+        return allAnswers.groupBy { it.student.id!! }.map { (studentId, answers) ->
+            val student = studentRepository.findById(studentId).orElse(null)
+            mapOf(
+                "studentId" to studentId,
+                "studentName" to (student?.fullName ?: "Unknown"),
+                "answers" to answers.map { sa ->
+                    mapOf(
+                        "questionId" to sa.question.id,
+                        "questionText" to sa.question.questionText,
+                        "chosenAnswer" to sa.chosenAnswer,
+                        "isCorrect" to sa.isCorrect
+                    )
+                }
+            )
+        }
+    }
+
 }

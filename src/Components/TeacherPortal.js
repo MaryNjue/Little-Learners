@@ -4,16 +4,15 @@ import '../App.css'; // Import the main CSS file for global styles
 import './TeacherPortal.css'; // Import specific styles for TeacherPortal
 import StudentManagement from './StudentManager/StudentManagement';
 import AssignmentManager from './assignmentManager/Assignment';
-import AddSubject from '../Components/Subject/Subject'; // <-- ADDED: Import the new component
+import AddSubject from '../Components/Subject/Subject';
 import { db } from "../firebaseConfig";
-
-
+import StudentResultsList from './assignmentManager/StudentResultsList'; // ✅ Added import
 
 function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogout }) {
   const [activeView, setActiveView] = useState('dashboard');
   const [loading, setLoading] = useState(true);
 
-  // <-- ADDED: State for students and mock data
+  // State for students and mock data
   const [students, setStudents] = useState([]);
   const mockStudents = [
     { id: 'student123', name: 'Timmy L.', gradeLevel: 'K' },
@@ -21,32 +20,27 @@ function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogou
     { id: 'student789', name: 'John D.', gradeLevel: '2' },
   ];
 
-  // UseEffect to manage loading state based on required props being available
   useEffect(() => {
     console.log("TeacherPortal: Received Teacher ID:", loggedInTeacherId);
     console.log("TeacherPortal: Received Teacher Username:", loggedInTeacherUsername);
 
-    // Set loading to false once loggedInTeacherId and Username are available.
     if (loggedInTeacherId && loggedInTeacherUsername) {
       setLoading(false);
-      // <-- ADDED: Set the mock student data
       setStudents(mockStudents);
     } else {
-      // If for some reason props are not immediately available, keep loading
       setLoading(true);
     }
   }, [loggedInTeacherId, loggedInTeacherUsername]);
 
-  // Dummy data for dashboard overview (remains as in your original file)
+  // Dummy dashboard data
   const totalStudents = 25;
   const activeAssignments = 10;
   const unreadMessages = 3;
   const upcomingEvents = 2;
 
-  // Function to render the content based on activeView
+  // Render content depending on activeView
   const renderContent = () => {
     if (loading) {
-      // Show a loading message while TeacherPortal waits for props from App.js
       return (
         <div className="flex items-center justify-center h-full">
           <p className="text-gray-500 text-lg">Loading Teacher Portal content...</p>
@@ -54,7 +48,7 @@ function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogou
       );
     }
 
-    switch (activeView) {
+    switch (activeView.type || activeView) {
       case 'dashboard':
         return (
           <>
@@ -68,62 +62,35 @@ function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogou
                   <Settings className="teacher-action-button-icon" />
                 </button>
                 <div className="teacher-avatar-info">
-                  {/* Display loggedInTeacherUsername here */}
                   <img src="https://placehold.co/40x40/FFC107/FFFFFF?text=TE" alt="Teacher Avatar" className="teacher-avatar-img" />
                   <span className="teacher-name">{loggedInTeacherUsername || 'Teacher'}</span>
                 </div>
               </div>
             </div>
 
-            {/* Overview Cards (structure remains as per your original file) */}
+            {/* Overview cards */}
             <div className="dashboard-cards-grid">
-              <DashboardCard
-                title="Total Students"
-                value={totalStudents}
-                icon={<Users className="dashboard-card-icon" />}
-                bgColorClass="bg-blue-50"
-              />
-              <DashboardCard
-                title="Active Assignments"
-                value={activeAssignments}
-                icon={<BookOpen className="dashboard-card-icon" />}
-                bgColorClass="bg-green-50"
-              />
-              <DashboardCard
-                title="Unread Messages"
-                value={unreadMessages}
-                icon={<MessageSquare className="dashboard-card-icon" />}
-                bgColorClass="bg-yellow-50"
-              />
-              <DashboardCard
-                title="Upcoming Events"
-                value={upcomingEvents}
-                icon={<CalendarDays className="dashboard-card-icon" />}
-                bgColorClass="bg-red-50"
-              />
+              <DashboardCard title="Total Students" value={totalStudents} icon={<Users className="dashboard-card-icon" />} bgColorClass="bg-blue-50" />
+              <DashboardCard title="Active Assignments" value={activeAssignments} icon={<BookOpen className="dashboard-card-icon" />} bgColorClass="bg-green-50" />
+              <DashboardCard title="Unread Messages" value={unreadMessages} icon={<MessageSquare className="dashboard-card-icon" />} bgColorClass="bg-yellow-50" />
+              <DashboardCard title="Upcoming Events" value={upcomingEvents} icon={<CalendarDays className="dashboard-card-icon" />} bgColorClass="bg-red-50" />
             </div>
 
-            {/* Quick Actions / Recent Activity (Placeholder) */}
+            {/* Quick Actions */}
             <div className="quick-actions-section">
               <h2 className="quick-actions-title">Quick Actions & Recent Activity</h2>
               <div className="quick-actions-grid">
                 <div className="quick-action-card">
                   <h3 className="quick-action-card-title">Manage Students</h3>
                   <p className="quick-action-card-text">Add new students, view profiles, or update information.</p>
-                  <button
-                    onClick={() => setActiveView('student-management')}
-                    className="quick-action-button"
-                  >
+                  <button onClick={() => setActiveView('student-management')} className="quick-action-button">
                     Go to Students
                   </button>
                 </div>
                 <div className="quick-action-card indigo">
                   <h3 className="quick-action-card-title">Create New Assignment</h3>
                   <p className="quick-action-card-text">Design and assign new learning activities for your class.</p>
-                  <button
-                    onClick={() => setActiveView('assignments')}
-                    className="quick-action-button indigo"
-                  >
+                  <button onClick={() => setActiveView('assignments')} className="quick-action-button indigo">
                     Create Assignment
                   </button>
                 </div>
@@ -139,30 +106,41 @@ function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogou
             </div>
           </>
         );
+
       case 'student-management':
-        // Pass necessary props to StudentManagement
-        return (
-          <StudentManagement
-            loggedInTeacherId={loggedInTeacherId}
-            loggedInTeacherUsername={loggedInTeacherUsername}
-          />
-        );
+        return <StudentManagement loggedInTeacherId={loggedInTeacherId} loggedInTeacherUsername={loggedInTeacherUsername} />;
+
       case 'assignments':
         return (
           <AssignmentManager
-             db={db} 
-             appId={loggedInTeacherId}         
-             userId={loggedInTeacherId}        
-             loggedInTeacherId={loggedInTeacherId}
-             loggedInTeacherUsername={loggedInTeacherUsername}
+            db={db}
+            appId={loggedInTeacherId}
+            userId={loggedInTeacherId}
+            loggedInTeacherId={loggedInTeacherId}
+            loggedInTeacherUsername={loggedInTeacherUsername}
+            onViewResults={(assignmentId) =>
+              setActiveView({ type: 'student-results', assignmentId })
+            }
           />
         );
-      case 'add-subject': // <-- ADDED: New case to render the AddSubject component
+
+      case 'add-subject':
         return <AddSubject loggedInTeacherId={loggedInTeacherId} students={students} />;
+
       case 'analytics':
         return <h2>Analytics and Reports</h2>;
+
       case 'settings':
         return <h2>Settings</h2>;
+
+      case 'student-results':
+        return (
+          <StudentResultsList
+            assignmentId={activeView.assignmentId}
+            onBack={() => setActiveView('assignments')}
+          />
+        );
+
       default:
         return <div>Page not found.</div>;
     }
@@ -170,7 +148,7 @@ function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogou
 
   return (
     <div className="teacher-portal-container">
-      {/* Sidebar Navigation (structure remains as per your original file) */}
+      {/* Sidebar */}
       <aside className="teacher-sidebar">
         <div>
           <div className="teacher-sidebar-header">
@@ -180,86 +158,56 @@ function TeacherPortal({ loggedInTeacherId, loggedInTeacherUsername, handleLogou
           <nav className="teacher-nav">
             <ul>
               <li className="teacher-nav-item">
-                <a
-                  href="#"
-                  onClick={() => setActiveView('dashboard')}
-                  className={`teacher-nav-link ${activeView === 'dashboard' ? 'active' : ''}`}
-                >
-                  <BarChart2 className="teacher-nav-link-icon" />
-                  Dashboard
+                <a href="#" onClick={() => setActiveView('dashboard')} className={`teacher-nav-link ${activeView === 'dashboard' ? 'active' : ''}`}>
+                  <BarChart2 className="teacher-nav-link-icon" /> Dashboard
                 </a>
               </li>
               <li className="teacher-nav-item">
-                <a
-                  href="#"
-                  onClick={() => setActiveView('student-management')}
-                  className={`teacher-nav-link ${activeView === 'student-management' ? 'active' : ''}`}
-                >
-                  <Users className="teacher-nav-link-icon" />
-                  Student Management
+                <a href="#" onClick={() => setActiveView('student-management')} className={`teacher-nav-link ${activeView === 'student-management' ? 'active' : ''}`}>
+                  <Users className="teacher-nav-link-icon" /> Student Management
                 </a>
               </li>
               <li className="teacher-nav-item">
-                <a
-                  href="#"
-                  onClick={() => setActiveView('assignments')}
-                  className={`teacher-nav-link ${activeView === 'assignments' ? 'active' : ''}`}
-                >
-                  <FileText className="teacher-nav-link-icon" />
-                  Content & Assignments
+                <a href="#" onClick={() => setActiveView('assignments')} className={`teacher-nav-link ${activeView === 'assignments' ? 'active' : ''}`}>
+                  <FileText className="teacher-nav-link-icon" /> Content & Assignments
                 </a>
               </li>
-              {/* <-- ADDED: New navigation item for Add Subject --> */}
               <li className="teacher-nav-item">
-                <a
-                  href="#"
-                  onClick={() => setActiveView('add-subject')}
-                  className={`teacher-nav-link ${activeView === 'add-subject' ? 'active' : ''}`}
-                >
-                  <Plus className="teacher-nav-link-icon" />
-                  Add Subject
+                <a href="#" onClick={() => setActiveView('add-subject')} className={`teacher-nav-link ${activeView === 'add-subject' ? 'active' : ''}`}>
+                  <Plus className="teacher-nav-link-icon" /> Add Subject
                 </a>
               </li>
               <li className="teacher-nav-item">
                 <a href="#" className="teacher-nav-link">
-                  <MessageSquare className="teacher-nav-link-icon" />
-                  Communication
+                  <MessageSquare className="teacher-nav-link-icon" /> Communication
                 </a>
               </li>
               <li className="teacher-nav-item">
                 <a href="#" className="teacher-nav-link">
-                  <CalendarDays className="teacher-nav-link-icon" />
-                  Calendar
+                  <CalendarDays className="teacher-nav-link-icon" /> Calendar
                 </a>
               </li>
             </ul>
           </nav>
         </div>
-        {/* Logout Button */}
         <div>
-          {/* Now uses the handleLogout prop passed from App.js */}
-          <button className="teacher-logout-button" onClick={handleLogout}> {/* <-- ADDED onClick={handleLogout} */}
-            <LogOut className="teacher-nav-link-icon" />
-            Logout
+          <button className="teacher-logout-button" onClick={handleLogout}>
+            <LogOut className="teacher-nav-link-icon" /> Logout
           </button>
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="teacher-main-content">
-        {renderContent()}
-      </main>
+      {/* Main */}
+      <main className="teacher-main-content">{renderContent()}</main>
     </div>
   );
 }
 
-// Reusable Dashboard Card Component
+// Dashboard Card component
 function DashboardCard({ title, value, icon, bgColorClass }) {
   return (
     <div className={`dashboard-card ${bgColorClass}`}>
-      <div className="dashboard-card-icon-wrapper">
-        {icon}
-      </div>
+      <div className="dashboard-card-icon-wrapper">{icon}</div>
       <div>
         <h3 className="dashboard-card-title">{title}</h3>
         <p className="dashboard-card-value">{value}</p>

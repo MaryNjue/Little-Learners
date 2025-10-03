@@ -8,6 +8,7 @@ import LoginPage from "./Components/Auth/LoginPage";
 import StudentPortal from "./Components/StudentPortal";
 import TeacherPortal from "./Components/TeacherPortal";
 import "./App.css";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 const app_id = (process.env.REACT_APP_APP_ID || "local-dev-app-id")
   .split("#")[0]

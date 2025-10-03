@@ -23,7 +23,8 @@ class AssignmentController(
     private val studentAssignmentService: StudentAssignmentService,
     private val studentAssignmentRepository: StudentAssignmentRepository,
     private val objectMapper: ObjectMapper,
-    private val fileUploadService: FileUploadService
+    private val fileUploadService: FileUploadService,
+    private val studentRepository: com.littlelearners.backend.repositories.StudentRepository
 ) {
 
     // -------------------------------
@@ -73,7 +74,8 @@ class AssignmentController(
                 maxMarks = assignment.maxMarks,
                 fileUrl = assignment.fileUrl,
                 assignedTo = assignment.assignedTo,
-                assignedStudentIds = request.assignedStudentIds
+                assignedStudentIds = request.assignedStudentIds,
+                status = "PENDING"
             )
             ResponseEntity.status(HttpStatus.CREATED).body(response)
         } catch (e: Exception) {
@@ -118,7 +120,7 @@ class AssignmentController(
     }
 
     // -------------------------------
-    // Get assignments for a student
+    // Get assignments for a student by studentId
     // -------------------------------
     @GetMapping("/student/{studentId}")
     fun getAssignmentsForStudent(@PathVariable studentId: UUID): ResponseEntity<Any> {
@@ -145,7 +147,7 @@ class AssignmentController(
                     },
                     status = studentAssignment?.completionStatus ?: "PENDING",
                     grade = studentAssignment?.grade,
-                    teacherFeedback = null // we can extend later
+                    teacherFeedback = null
                 )
             }
 
@@ -157,7 +159,7 @@ class AssignmentController(
     }
 
     // -------------------------------
-    // Finalize Student Assignment (compute score + mark complete)
+    // Finalize Student Assignment (studentId based)
     // -------------------------------
     @PutMapping("/{assignmentId}/finalize/student/{studentId}")
     fun finalizeStudentAssignment(
@@ -178,6 +180,34 @@ class AssignmentController(
         }
     }
 
+    // -------------------------------
+    // New endpoint: Finalize assignment using userId (UUID) only for this case
+    // -------------------------------
+    @PutMapping("/{assignmentId}/finalize/user/{userId}")
+    fun finalizeAssignmentByUser(
+        @PathVariable assignmentId: UUID,
+        @PathVariable userId: UUID
+    ): ResponseEntity<Any> {
+        return try {
+            val student = studentRepository.findByUserId(userId)
+                ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(mapOf("message" to "No student found for this user"))
+
+            val studentId = student.id!!
+
+            val result = studentAssignmentService.finishAssignment(studentId, assignmentId)
+
+            ResponseEntity.ok(mapOf(
+                "message" to "Assignment finalized",
+                "status" to result.completionStatus,
+                "grade" to result.grade
+            ))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("message" to "Failed to finalize assignment status: ${e.message}"))
+        }
+    }
 
     // -------------------------------
     // Update assignment
@@ -213,7 +243,8 @@ class AssignmentController(
                 maxMarks = updatedAssignment.maxMarks,
                 fileUrl = updatedAssignment.fileUrl,
                 assignedTo = updatedAssignment.assignedTo,
-                assignedStudentIds = request.assignedStudentIds
+                assignedStudentIds = request.assignedStudentIds,
+                status = "PENDING"
             )
             ResponseEntity.ok(response)
         } catch (e: Exception) {

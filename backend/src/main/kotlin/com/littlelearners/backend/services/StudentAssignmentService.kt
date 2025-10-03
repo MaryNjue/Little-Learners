@@ -70,8 +70,7 @@ class StudentAssignmentService(
     }
 
     fun finishAssignment(studentId: UUID, assignmentId: UUID): StudentAssignment {
-        val studentAssignment = studentAssignmentRepository.findByStudentIdAndAssignmentId(studentId, assignmentId)
-            ?: throw EntityNotFoundException("StudentAssignment not found for studentId=$studentId, assignmentId=$assignmentId")
+        var studentAssignment = studentAssignmentRepository.findByStudentIdAndAssignmentId(studentId, assignmentId)
 
         val answers = studentAnswerRepository.findByStudent_IdAndQuestion_Assignment_Id(studentId, assignmentId)
 
@@ -79,8 +78,24 @@ class StudentAssignmentService(
         val correctAnswers = answers.count { it.isCorrect }
         val score = if (totalQuestions > 0) (correctAnswers * 100) / totalQuestions else 0
 
-        studentAssignment.completionStatus = "COMPLETED"
-        studentAssignment.grade = score
+        if (studentAssignment == null) {
+            // ✅ create a new StudentAssignment if missing
+            val student = studentRepository.findById(studentId)
+                .orElseThrow { EntityNotFoundException("Student not found with id $studentId") }
+            val assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow { EntityNotFoundException("Assignment not found with id $assignmentId") }
+
+            studentAssignment = StudentAssignment(
+                student = student,
+                assignment = assignment,
+                completionStatus = "COMPLETED",
+                grade = score
+            )
+        } else {
+            // ✅ update existing one
+            studentAssignment.completionStatus = "COMPLETED"
+            studentAssignment.grade = score
+        }
 
         return studentAssignmentRepository.save(studentAssignment)
     }

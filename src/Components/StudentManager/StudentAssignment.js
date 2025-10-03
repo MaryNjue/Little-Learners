@@ -13,6 +13,7 @@ function StudentAssignments() {
   const [isLoading, setIsLoading] = useState(true);
   
   const loggedInStudentId = localStorage.getItem("studentUserId");
+  console.log(`Fetching assignments for studentId=${loggedInStudentId}`);
 
   const fetchAssignments = () => {
     if (!loggedInStudentId) return;
@@ -20,6 +21,8 @@ function StudentAssignments() {
 
     axios.get(`${API_BASE_URL}/api/assignments/student/${loggedInStudentId}`)
       .then(res => {
+        console.log("Assignments from backend:", res.data);
+        console.log(loggedInStudentId);
         setAssignments(res.data);
       })
       .catch(err => {

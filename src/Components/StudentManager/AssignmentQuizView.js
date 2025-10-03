@@ -3,7 +3,7 @@ import axios from 'axios';
 import { ChevronLeft, CheckCircle, XCircle, ArrowRight, PartyPopper } from 'lucide-react';
 import './AssignmentQuizView.css';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'https://little-learners-2i8y.onrender.com';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('studentToken'); 
@@ -14,7 +14,7 @@ const getAuthHeaders = () => {
 };
 
 function AssignmentQuizView({ assignment, onFinish }) {
-  const [studentId, setStudentId] = useState(null);
+  const [studentId, setStudentId] = useState(null); // store actual studentId
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentAnswers, setCurrentAnswers] = useState({});
@@ -32,7 +32,10 @@ function AssignmentQuizView({ assignment, onFinish }) {
     const loadQuizData = async () => {
       setIsLoading(true);
       try {
-        const userId = localStorage.getItem("studentUserId");
+        const userId = localStorage.getItem("studentUserId"); // UUID of logged-in user
+        if (!userId) throw new Error("No logged-in user ID found");
+
+        // 1️⃣ Fetch the studentId linked to this user
         const studentRes = await axios.get(
           `${API_BASE_URL}/api/students/me/student?userId=${userId}`,
           getAuthHeaders()
@@ -40,12 +43,12 @@ function AssignmentQuizView({ assignment, onFinish }) {
         const fetchedStudentId = studentRes.data.studentId;
         setStudentId(fetchedStudentId);
 
+        // 2️⃣ Fetch questions for the assignment
         const questionRes = await axios.get(
           `${API_BASE_URL}/api/questions/assignment/${assignment.id}`,
           getAuthHeaders()
         );
         setQuestions(questionRes.data);
-
       } catch (err) {
         console.error("Failed to load quiz data:", err.response || err);
         alert("Failed to load quiz data. Check student and assignment IDs.");
@@ -66,7 +69,7 @@ function AssignmentQuizView({ assignment, onFinish }) {
     try {
       const res = await axios.post(
         `${API_BASE_URL}/api/answers`,
-        { studentId, questionId, chosenAnswer },
+        { studentId, questionId, chosenAnswer }, // ✅ send actual studentId
         getAuthHeaders()
       );
 
@@ -86,7 +89,6 @@ function AssignmentQuizView({ assignment, onFinish }) {
           message: `❌ Incorrect. The correct answer was: ${question.correctAnswer}`
         });
       }
-
     } catch (err) {
       console.error("Failed to submit answer:", err.response || err);
       alert("Failed to save answer. Check backend logs.");
@@ -101,15 +103,20 @@ function AssignmentQuizView({ assignment, onFinish }) {
     }
   };
 
-  // Finalize assignment
+  // Finalize assignment using the new backend endpoint
   const handleSubmit = async () => {
+    if (!studentId) return;
+
     try {
       await axios.put(
         `${API_BASE_URL}/api/assignments/${assignment.id}/finalize/student/${studentId}`,
         {},
         getAuthHeaders()
       );
+
       setIsSubmitted(true);
+
+      if (onFinish) onFinish(true);
     } catch (err) {
       console.error("Failed to finalize assignment:", err.response || err);
       alert("Error finalizing assignment. Please try again.");
@@ -125,7 +132,12 @@ function AssignmentQuizView({ assignment, onFinish }) {
         <PartyPopper size={50} className="text-yellow-500 mb-4" />
         <h2>🎉 Quiz Completed!</h2>
         <p>You scored <strong>{score}</strong> out of <strong>{questions.length}</strong></p>
-        <button onClick={onFinish} className="quiz-button back-btn">
+        <p className="mt-2 italic">💪 You got this!</p>
+        <button
+          onClick={() => onFinish && onFinish(true)}
+          className="quiz-button back-btn"
+          type="button"
+        >
           Back to Assignments
         </button>
       </div>
@@ -137,7 +149,11 @@ function AssignmentQuizView({ assignment, onFinish }) {
 
   return (
     <div className="assignments-wrapper quiz-view">
-      <button onClick={onFinish} className="back-button">
+      <button
+        onClick={() => onFinish && onFinish(false)}
+        className="back-button"
+        type="button"
+      >
         <ChevronLeft size={20} /> Back to Assignments
       </button>
 
@@ -162,6 +178,7 @@ function AssignmentQuizView({ assignment, onFinish }) {
               }`}
               onClick={() => handleAnswer(question.id, option)}
               disabled={!!answerState}
+              type="button"
             >
               {option}
             </button>
@@ -178,6 +195,7 @@ function AssignmentQuizView({ assignment, onFinish }) {
           <button
             onClick={currentIndex + 1 < questions.length ? handleNext : handleSubmit}
             className="next-btn"
+            type="button"
           >
             {currentIndex + 1 < questions.length ? (
               <>Next <ArrowRight size={18} /></>

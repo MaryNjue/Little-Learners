@@ -2,7 +2,10 @@ package com.littlelearners.backend.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.littlelearners.backend.models.Assignment
+import com.littlelearners.backend.models.StudentAssignment
 import com.littlelearners.backend.repositories.AssignmentRepository
+import com.littlelearners.backend.repositories.StudentAssignmentRepository
+import com.littlelearners.backend.repositories.StudentRepository
 import com.littlelearners.backend.repositories.UserRepository
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
@@ -13,7 +16,9 @@ import java.util.UUID
 class AssignmentService(
     private val assignmentRepository: AssignmentRepository,
     private val userRepository: UserRepository,
-    private val objectMapper: ObjectMapper // Used for serializing/deserializing assignedStudentIds
+    private val studentRepository: StudentRepository,
+    private val studentAssignmentRepository: StudentAssignmentRepository,
+    private val objectMapper: ObjectMapper
 ) {
     fun createAssignment(
         title: String,
@@ -30,12 +35,7 @@ class AssignmentService(
         val teacher = userRepository.findById(teacherId)
             .orElseThrow { EntityNotFoundException("Teacher with ID $teacherId not found") }
 
-
-        val finalAssignedTo = if (assignedStudentIds.isNullOrEmpty()) {
-            "all"
-        } else {
-            "specific"
-        }
+        val finalAssignedTo = if (assignedStudentIds.isNullOrEmpty()) "all" else "specific"
 
         val assignment = Assignment(
             title = title,
@@ -43,13 +43,41 @@ class AssignmentService(
             dueDate = dueDate,
             teacher = teacher,
             assignedStudentIds = assignedStudentIds?.let { objectMapper.writeValueAsString(it) },
-            assignedTo = finalAssignedTo, // Use the reliably derived value
+            assignedTo = finalAssignedTo,
             automatedConfig = automatedConfig,
             fileUrl = fileUrl,
             maxMarks = maxMarks,
             subject = subject
         )
-        return assignmentRepository.save(assignment)
+
+        val savedAssignment = assignmentRepository.save(assignment)
+
+        // 🚨 Create StudentAssignment rows automatically
+        if (finalAssignedTo == "all") {
+            val allStudents = studentRepository.findAll()
+            allStudents.forEach { student ->
+                val sa = StudentAssignment(
+                    student = student,
+                    assignment = savedAssignment,
+                    completionStatus = "PENDING",
+                    grade = null
+                )
+                studentAssignmentRepository.save(sa)
+            }
+        } else if (finalAssignedTo == "specific" && assignedStudentIds != null) {
+            val students = studentRepository.findAllById(assignedStudentIds)
+            students.forEach { student ->
+                val sa = StudentAssignment(
+                    student = student,
+                    assignment = savedAssignment,
+                    completionStatus = "PENDING",
+                    grade = null
+                )
+                studentAssignmentRepository.save(sa)
+            }
+        }
+
+        return savedAssignment
     }
 
     fun getAssignmentsByTeacherId(teacherId: UUID): List<Assignment> {
@@ -75,52 +103,65 @@ class AssignmentService(
         userRepository.findById(teacherId)
             .orElseThrow { EntityNotFoundException("Teacher with ID $teacherId not found") }
 
-        // 🚨 CRITICAL FIX: Apply the same reliable logic during updates.
-        val finalAssignedTo = if (assignedStudentIds.isNullOrEmpty()) {
-            "all"
-        } else {
-            "specific"
-        }
+        val finalAssignedTo = if (assignedStudentIds.isNullOrEmpty()) "all" else "specific"
 
         existingAssignment.title = title
         existingAssignment.description = description
         existingAssignment.dueDate = dueDate
         existingAssignment.assignedStudentIds = assignedStudentIds?.let { objectMapper.writeValueAsString(it) }
-        existingAssignment.assignedTo = finalAssignedTo // Use the reliably derived value
+        existingAssignment.assignedTo = finalAssignedTo
         existingAssignment.automatedConfig = automatedConfig
         existingAssignment.fileUrl = fileUrl
         existingAssignment.maxMarks = maxMarks
         existingAssignment.subject = subject
 
-        return assignmentRepository.save(existingAssignment)
+        val updatedAssignment = assignmentRepository.save(existingAssignment)
+
+        // 🚨 Sync StudentAssignment table
+        studentAssignmentRepository.findAll()
+            .filter { it.assignment.id == id }
+            .forEach { studentAssignmentRepository.delete(it) }
+
+        if (finalAssignedTo == "all") {
+            val allStudents = studentRepository.findAll()
+            allStudents.forEach { student ->
+                val sa = StudentAssignment(
+                    student = student,
+                    assignment = updatedAssignment,
+                    completionStatus = "PENDING",
+                    grade = null
+                )
+                studentAssignmentRepository.save(sa)
+            }
+        } else if (finalAssignedTo == "specific" && assignedStudentIds != null) {
+            val students = studentRepository.findAllById(assignedStudentIds)
+            students.forEach { student ->
+                val sa = StudentAssignment(
+                    student = student,
+                    assignment = updatedAssignment,
+                    completionStatus = "PENDING",
+                    grade = null
+                )
+                studentAssignmentRepository.save(sa)
+            }
+        }
+
+        return updatedAssignment
     }
 
     fun getAssignmentsForStudent(studentId: UUID): List<Assignment> {
-        // This relies on the custom @Query method in AssignmentRepository.kt
         return assignmentRepository.findAssignedAssignments(studentId)
     }
-
 
     fun deleteAssignment(id: UUID) {
         if (!assignmentRepository.existsById(id)) {
             throw EntityNotFoundException("Assignment with ID $id not found")
         }
+        // Delete related StudentAssignments too
+        studentAssignmentRepository.findAll()
+            .filter { it.assignment.id == id }
+            .forEach { studentAssignmentRepository.delete(it) }
+
         assignmentRepository.deleteById(id)
-    }
-
-    // In AssignmentService.kt
-
-// ... add this function
-
-    fun finalizeStudentAssignment(assignmentId: UUID, studentId: UUID) {
-        // 🚨 IMPLEMENTATION REQUIRED:
-        // 1. You should verify that all questions for this assignment have a corresponding StudentAnswer entry
-        //    for this student.
-        // 2. You need a dedicated table/model (e.g., StudentAssignmentStatus) to save the overall status,
-        //    grade, and feedback for the student/assignment pair.
-        // 3. Update the status in that model to 'SUBMITTED_PENDING_GRADE'.
-
-        // For now, assume success and print a log:
-        println("Finalizing assignment $assignmentId for student $studentId.")
     }
 }
