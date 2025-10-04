@@ -45,7 +45,7 @@ function App() {
       return;
     }
 
-    // 🔹 Step 2: Fallback to Firebase (teachers)
+
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
 

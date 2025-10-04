@@ -155,21 +155,113 @@ const AssignmentFormModal = ({ isOpen, onClose, onSaved, initialAssignment, user
           <button onClick={onClose} className="modal-close-button"><X size={24} /></button>
         </div>
 
-        <form onSubmit={handleSubmit} className="form-container">
-          {/* Title, Description, Subject, Due Date, Max Marks, Status */}
-          {/* File Upload if uploaded type */}
-          <div className="form-actions">
-            <button type="button" onClick={onClose} className="cancel-button">Cancel</button>
-            <button type="submit" className="submit-button" disabled={saving}>{saving ? 'Saving...' : (initialAssignment ? 'Update Assignment' : 'Add Assignment')}</button>
-          </div>
-        </form>
+       <form onSubmit={handleSubmit} className="form-container">
+  <div className="form-field">
+    <label className="form-label">Title</label>
+    <input
+      type="text"
+      name="title"
+      value={formState.title}
+      onChange={handleInputChange}
+      className="form-input"
+      required
+    />
+  </div>
+
+  <div className="form-field">
+    <label className="form-label">Description</label>
+    <textarea
+      name="description"
+      value={formState.description}
+      onChange={handleInputChange}
+      className="form-textarea"
+      rows={3}
+    />
+  </div>
+
+  <div className="form-field">
+    <label className="form-label">Subject</label>
+    <input
+      type="text"
+      name="subject"
+      value={formState.subject}
+      onChange={handleInputChange}
+      className="form-input"
+    />
+  </div>
+
+  <div className="form-field">
+    <label className="form-label">Due Date</label>
+    <input
+      type="date"
+      name="dueDate"
+      value={formState.dueDate}
+      onChange={handleInputChange}
+      className="form-input"
+    />
+  </div>
+
+  <div className="form-field">
+    <label className="form-label">Max Marks</label>
+    <input
+      type="number"
+      name="maxMarks"
+      value={formState.maxMarks}
+      onChange={handleInputChange}
+      className="form-input"
+      min="0"
+    />
+  </div>
+
+  <div className="form-field">
+    <label className="form-label">Status</label>
+    <select
+      name="status"
+      value={formState.status}
+      onChange={handleInputChange}
+      className="form-select"
+    >
+      <option value="Draft">Draft</option>
+      <option value="Published">Published</option>
+      <option value="Pending">Pending</option>
+    </select>
+  </div>
+
+  <div className="form-field">
+    <label className="form-label">Upload File</label>
+    <input
+      type="file"
+      className="form-input"
+      onChange={(e) => setSelectedFile(e.target.files[0])}
+    />
+    {formState.fileUrl && (
+      <p className="mt-2 text-sm">
+        Current file:{" "}
+        <a href={formState.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+          View File
+        </a>
+      </p>
+    )}
+  </div>
+
+  <div className="form-actions">
+    <button type="button" onClick={onClose} className="cancel-button">
+      Cancel
+    </button>
+    <button type="submit" className="submit-button" disabled={saving}>
+      {saving ? "Saving..." : (initialAssignment ? "Update Assignment" : "Add Assignment")}
+    </button>
+  </div>
+</form>
+
+
       </div>
     </div>
   );
 };
 
 // --- AssignmentManager Component ---
-function AssignmentManager({ onViewResults }) {   // ✅ Added prop
+function AssignmentManager({ onViewResults }) {  
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
