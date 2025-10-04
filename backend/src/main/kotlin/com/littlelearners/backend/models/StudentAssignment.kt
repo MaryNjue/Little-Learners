@@ -4,7 +4,9 @@ import jakarta.persistence.*
 import java.util.UUID
 
 @Entity
-@Table(name = "student_assignments")
+@Table(name = "student_assignments",
+uniqueConstraints = [UniqueConstraint(columnNames = ["student_id", "assignment_id"])])
+
 data class StudentAssignment(
     @Id
     @Column(name = "id", updatable = false, nullable = false)

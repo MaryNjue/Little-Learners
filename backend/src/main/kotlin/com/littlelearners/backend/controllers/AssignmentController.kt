@@ -129,7 +129,7 @@ class AssignmentController(
 
             val responses = assignments.map { assignment ->
                 val studentAssignment = studentAssignmentRepository
-                    .findByStudent_IdAndAssignment_Id(studentId, assignment.id!!) // ✅ fixed here
+                    .findFirstByStudent_IdAndAssignment_Id(studentId, assignment.id!!)
 
                 AssignmentResponse(
                     id = assignment.id!!,

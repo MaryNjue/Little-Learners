@@ -11,5 +11,6 @@ interface StudentAssignmentRepository : JpaRepository<StudentAssignment, UUID> {
 
     fun findByStudent_Id(studentId: UUID): List<StudentAssignment>
 
-    fun findByStudent_IdAndAssignment_Id(studentId: UUID, assignmentId: UUID): StudentAssignment?
+
+    fun findFirstByStudent_IdAndAssignment_Id(studentId: UUID, assignmentId: UUID): StudentAssignment?
 }
