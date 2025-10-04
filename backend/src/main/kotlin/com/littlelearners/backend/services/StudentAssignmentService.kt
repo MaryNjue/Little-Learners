@@ -16,6 +16,7 @@ class StudentAssignmentService(
     private val assignmentRepository: AssignmentRepository,
     private val studentAnswerRepository: StudentAnswerRepository
 ) {
+
     fun assignStudentToAssignment(
         studentId: UUID,
         assignmentId: UUID,
@@ -26,7 +27,7 @@ class StudentAssignmentService(
         val assignment = assignmentRepository.findById(assignmentId)
             .orElseThrow { EntityNotFoundException("Assignment with ID $assignmentId not found") }
 
-        val existing = studentAssignmentRepository.findByStudentIdAndAssignmentId(studentId, assignmentId)
+        val existing = studentAssignmentRepository.findByStudent_IdAndAssignment_Id(studentId, assignmentId)
         if (existing != null) {
             throw IllegalArgumentException("Student ${student.fullName} is already assigned to assignment ${assignment.title}")
         }
@@ -41,7 +42,7 @@ class StudentAssignmentService(
     }
 
     fun getStudentAssignmentsForStudent(studentId: UUID): List<StudentAssignment> {
-        return studentAssignmentRepository.findByStudentId(studentId)
+        return studentAssignmentRepository.findByStudent_Id(studentId)
     }
 
     fun getStudentAssignmentById(id: UUID): StudentAssignment? {
@@ -70,7 +71,7 @@ class StudentAssignmentService(
     }
 
     fun finishAssignment(studentId: UUID, assignmentId: UUID): StudentAssignment {
-        var studentAssignment = studentAssignmentRepository.findByStudentIdAndAssignmentId(studentId, assignmentId)
+        var studentAssignment = studentAssignmentRepository.findByStudent_IdAndAssignment_Id(studentId, assignmentId)
 
         val answers = studentAnswerRepository.findByStudent_IdAndAssignment_Id(studentId, assignmentId)
         val assignment = assignmentRepository.findById(assignmentId)
@@ -101,5 +102,4 @@ class StudentAssignmentService(
 
         return studentAssignmentRepository.save(studentAssignment)
     }
-
 }

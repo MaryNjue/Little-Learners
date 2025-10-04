@@ -7,9 +7,9 @@ import java.util.UUID
 
 @Repository
 interface StudentAssignmentRepository : JpaRepository<StudentAssignment, UUID> {
-    // Find all assignments for a specific student
-    fun findByStudentId(studentId: UUID): List<StudentAssignment>
 
-    // Find a specific student's assignment record by student and assignment IDs
-    fun findByStudentIdAndAssignmentId(studentId: UUID, assignmentId: UUID): StudentAssignment?
+
+    fun findByStudent_Id(studentId: UUID): List<StudentAssignment>
+
+    fun findByStudent_IdAndAssignment_Id(studentId: UUID, assignmentId: UUID): StudentAssignment?
 }

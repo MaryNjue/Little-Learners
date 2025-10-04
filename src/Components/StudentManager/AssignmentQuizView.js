@@ -62,6 +62,8 @@ function AssignmentQuizView({ assignment, onFinish }) {
 
   // Submit a single answer
   const handleAnswer = async (questionId, chosenAnswer) => {
+    console.log("Finalizing assignment for studentId:", studentId, "assignmentId:", assignment.id);
+
     if (!studentId) return;
 
     const question = questions[currentIndex];
@@ -105,24 +107,26 @@ function AssignmentQuizView({ assignment, onFinish }) {
 
   // Finalize assignment
   const handleSubmit = async () => {
-    if (!studentId) return;
+  if (!studentId) return;
 
-    try {
-      await axios.put(
-        `${API_BASE_URL}/api/assignments/${assignment.id}/finalize/student/${studentId}`,
-        {},
-        getAuthHeaders()
-      );
+  console.log("Finalizing with studentId:", studentId, "assignmentId:", assignment.id);
 
-      setIsSubmitted(true);
+  try {
+    await axios.put(
+      `${API_BASE_URL}/api/assignments/${assignment.id}/finalize/student/${studentId}`, 
+      {}, 
+      getAuthHeaders()
+    );
 
-      // ✅ Tell parent that this assignment is now completed
-      if (onFinish) onFinish(true);
-    } catch (err) {
-      console.error("Failed to finalize assignment:", err.response || err);
-      alert("Error finalizing assignment. Please try again.");
-    }
-  };
+    setIsSubmitted(true);
+
+    if (onFinish) onFinish(true);
+  } catch (err) {
+    console.error("Failed to finalize assignment:", err.response || err);
+    alert("Error finalizing assignment. Please try again.");
+  }
+};
+
 
   if (isLoading) return <div className="assignments-wrapper">Loading Quiz...</div>;
   if (!questions.length) return <div className="assignments-wrapper">No questions found for this assignment.</div>;

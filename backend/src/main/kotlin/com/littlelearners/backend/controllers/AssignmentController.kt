@@ -129,7 +129,7 @@ class AssignmentController(
 
             val responses = assignments.map { assignment ->
                 val studentAssignment = studentAssignmentRepository
-                    .findByStudentIdAndAssignmentId(studentId, assignment.id!!)
+                    .findByStudent_IdAndAssignment_Id(studentId, assignment.id!!) // ✅ fixed here
 
                 AssignmentResponse(
                     id = assignment.id!!,
@@ -181,7 +181,7 @@ class AssignmentController(
     }
 
     // -------------------------------
-    // New endpoint: Finalize assignment using userId (UUID) only for this case
+    // Finalize assignment using userId
     // -------------------------------
     @PutMapping("/{assignmentId}/finalize/user/{userId}")
     fun finalizeAssignmentByUser(
