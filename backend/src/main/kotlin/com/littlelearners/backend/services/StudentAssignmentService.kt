@@ -72,18 +72,18 @@ class StudentAssignmentService(
     fun finishAssignment(studentId: UUID, assignmentId: UUID): StudentAssignment {
         var studentAssignment = studentAssignmentRepository.findByStudentIdAndAssignmentId(studentId, assignmentId)
 
-        val answers = studentAnswerRepository.findByStudent_IdAndQuestion_Assignment_Id(studentId, assignmentId)
+        val answers = studentAnswerRepository.findByStudent_IdAndAssignment_Id(studentId, assignmentId)
+        val assignment = assignmentRepository.findById(assignmentId)
+            .orElseThrow { EntityNotFoundException("Assignment not found with id $assignmentId") }
 
         val totalQuestions = answers.size
         val correctAnswers = answers.count { it.isCorrect }
-        val score = if (totalQuestions > 0) (correctAnswers * 100) / totalQuestions else 0
+        val maxMarks = assignment.maxMarks ?: 100
+        val score = if (totalQuestions > 0) (correctAnswers * maxMarks) / totalQuestions else 0
 
         if (studentAssignment == null) {
-            // ✅ create a new StudentAssignment if missing
             val student = studentRepository.findById(studentId)
                 .orElseThrow { EntityNotFoundException("Student not found with id $studentId") }
-            val assignment = assignmentRepository.findById(assignmentId)
-                .orElseThrow { EntityNotFoundException("Assignment not found with id $assignmentId") }
 
             studentAssignment = StudentAssignment(
                 student = student,
@@ -92,11 +92,14 @@ class StudentAssignmentService(
                 grade = score
             )
         } else {
-            // ✅ update existing one
+            if (studentAssignment.completionStatus == "COMPLETED") {
+                throw IllegalStateException("Assignment already completed by this student")
+            }
             studentAssignment.completionStatus = "COMPLETED"
             studentAssignment.grade = score
         }
 
         return studentAssignmentRepository.save(studentAssignment)
     }
+
 }

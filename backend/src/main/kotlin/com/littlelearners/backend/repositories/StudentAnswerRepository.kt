@@ -8,12 +8,13 @@ import java.util.*
 
 @Repository
 interface StudentAnswerRepository : JpaRepository<StudentAnswer, UUID> {
-    fun findByStudent_IdAndQuestion_Assignment_Id(
+
+    fun findByStudent_IdAndAssignment_Id(
         studentId: UUID,
         assignmentId: UUID
     ): List<StudentAnswer>
 
-    fun findByQuestion_Assignment_Id(assignmentId: UUID): List<StudentAnswer>;
+    fun findByAssignment_Id(assignmentId: UUID): List<StudentAnswer>
 
     fun deleteByQuestion_Id(questionId: UUID)
 }
