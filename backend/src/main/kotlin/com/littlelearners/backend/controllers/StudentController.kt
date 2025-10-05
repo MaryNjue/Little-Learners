@@ -2,19 +2,22 @@ package com.littlelearners.backend.controllers
 
 import com.littlelearners.backend.dto.StudentRequest
 import com.littlelearners.backend.dto.StudentResponse
+import com.littlelearners.backend.repositories.StudentRepository
 import com.littlelearners.backend.services.StudentService
 import com.littlelearners.backend.services.UserService
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 @RestController
 @RequestMapping("/api/students")
 class StudentController(
     private val studentService: StudentService,
-    private val userService: UserService
+    private val userService: UserService,
+    private val studentRepository: StudentRepository
 ) {
 
     @PostMapping
@@ -214,6 +217,14 @@ class StudentController(
                 .body(mapOf("message" to "Failed to fetch Student ID: ${e.message}"))
         }
     }
+
+    @GetMapping("/getStudentId")
+    fun getStudentIdByUserId(@RequestParam userId: UUID): Map<String, Any> {
+        val student = studentRepository.findByUserId(userId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found")
+        return mapOf("studentId" to student.id)
+    }
+
 
 
 
