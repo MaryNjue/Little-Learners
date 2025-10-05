@@ -161,13 +161,13 @@ class AssignmentService(
 
         // Delete all answers linked to this assignment's questions
         assignment.questions.forEach { question ->
-            studentAnswerRepository.deleteByQuestion_Id(question.id) // <-- use instance, not class
+            studentAnswerRepository.deleteByQuestion_Id(question.id)
         }
 
-        // Delete related StudentAssignments (cascade is optional if mapped)
-        assignment.studentAssignments.forEach { studentAssignmentRepository.delete(it) }
+        // Delete related studentAssignments
+        val sas = studentAssignmentRepository.findAll().filter { it.assignment.id == id }
+        sas.forEach { studentAssignmentRepository.delete(it) }
 
-        // Finally, delete the assignment itself
         assignmentRepository.delete(assignment)
     }
 

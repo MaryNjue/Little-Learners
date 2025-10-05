@@ -22,6 +22,7 @@ function AssignmentQuizView({ assignment, onFinish }) {
   const [isLoading, setIsLoading] = useState(true);
   const [feedback, setFeedback] = useState(null);
   const [score, setScore] = useState(0);
+  const [hasFinalized, setHasFinalized] = useState(false);
 
   useEffect(() => {
     if (!assignment?.id) {
@@ -35,7 +36,7 @@ function AssignmentQuizView({ assignment, onFinish }) {
         const userId = localStorage.getItem("studentUserId"); 
         if (!userId) throw new Error("No logged-in user ID found");
 
-        // 1️⃣ Fetch the studentId linked to this user
+        // ✅ 1. Get studentId from backend
         const studentRes = await axios.get(
           `${API_BASE_URL}/api/students/me/student?userId=${userId}`,
           getAuthHeaders()
@@ -43,12 +44,25 @@ function AssignmentQuizView({ assignment, onFinish }) {
         const fetchedStudentId = studentRes.data.studentId;
         setStudentId(fetchedStudentId);
 
-        // 2️⃣ Fetch questions
+        // ✅ 2. Fetch questions
         const questionRes = await axios.get(
           `${API_BASE_URL}/api/questions/assignment/${assignment.id}`,
           getAuthHeaders()
         );
         setQuestions(questionRes.data);
+
+        // ✅ 3. Check if already completed (avoid duplicates)
+        const statusRes = await axios.get(
+          `${API_BASE_URL}/api/student-assignments/status/${assignment.id}/${fetchedStudentId}`,
+          getAuthHeaders()
+        );
+
+        if (statusRes.data?.completionStatus === "COMPLETED") {
+          setIsSubmitted(true);
+          setHasFinalized(true);
+          setScore(statusRes.data?.grade || 0);
+        }
+
       } catch (err) {
         console.error("Failed to load quiz data:", err.response || err);
         alert("Failed to load quiz data. Check student and assignment IDs.");
@@ -60,11 +74,9 @@ function AssignmentQuizView({ assignment, onFinish }) {
     loadQuizData();
   }, [assignment?.id]);
 
-  // Submit a single answer
+  // ✅ Submit a single answer
   const handleAnswer = async (questionId, chosenAnswer) => {
-    console.log("Finalizing assignment for studentId:", studentId, "assignmentId:", assignment.id);
-
-    if (!studentId) return;
+    if (!studentId || hasFinalized) return;
 
     const question = questions[currentIndex];
 
@@ -97,7 +109,7 @@ function AssignmentQuizView({ assignment, onFinish }) {
     }
   };
 
-  // Move to next question
+  // ✅ Next question
   const handleNext = () => {
     if (currentIndex + 1 < questions.length) {
       setCurrentIndex(prev => prev + 1);
@@ -105,32 +117,36 @@ function AssignmentQuizView({ assignment, onFinish }) {
     }
   };
 
-  // Finalize assignment
+  // ✅ Finalize entire assignment
   const handleSubmit = async () => {
-  if (!studentId) return;
+    if (!studentId || hasFinalized) return;
 
-  console.log("Finalizing with studentId:", studentId, "assignmentId:", assignment.id);
+    try {
+      console.log("Finalizing assignment for studentId:", studentId, "assignmentId:", assignment.id);
 
-  try {
-    await axios.put(
-      `${API_BASE_URL}/api/assignments/${assignment.id}/finalize/student/${studentId}`, 
-      {}, 
-      getAuthHeaders()
-    );
+      const finalizeRes = await axios.put(
+        `${API_BASE_URL}/api/assignments/${assignment.id}/finalize/student/${studentId}`, 
+        {}, 
+        getAuthHeaders()
+      );
 
-    setIsSubmitted(true);
+      setIsSubmitted(true);
+      setHasFinalized(true);
+      setScore(finalizeRes.data?.grade || score);
 
-    if (onFinish) onFinish(true);
-  } catch (err) {
-    console.error("Failed to finalize assignment:", err.response || err);
-    alert("Error finalizing assignment. Please try again.");
-  }
-};
+      // ✅ Notify parent to refresh list so it updates from "PENDING" → "COMPLETED"
+      if (onFinish) onFinish(true);
 
+    } catch (err) {
+      console.error("Failed to finalize assignment:", err.response || err);
+      alert("Error finalizing assignment. Please try again.");
+    }
+  };
 
   if (isLoading) return <div className="assignments-wrapper">Loading Quiz...</div>;
   if (!questions.length) return <div className="assignments-wrapper">No questions found for this assignment.</div>;
 
+  // ✅ Show final screen if completed
   if (isSubmitted) {
     return (
       <div className="quiz-finished">
@@ -139,7 +155,7 @@ function AssignmentQuizView({ assignment, onFinish }) {
         <p>You scored <strong>{score}</strong> out of <strong>{questions.length}</strong></p>
         <p className="mt-2 italic">💪 You got this!</p>
         <button
-          onClick={() => onFinish && onFinish(true)} // ✅ go back and refresh
+          onClick={() => onFinish && onFinish(true)}
           className="quiz-button back-btn"
           type="button"
         >
@@ -149,6 +165,7 @@ function AssignmentQuizView({ assignment, onFinish }) {
     );
   }
 
+  // ✅ Current question
   const question = questions[currentIndex];
   const answerState = currentAnswers[question.id];
 

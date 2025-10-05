@@ -1,3 +1,4 @@
+// src/main/kotlin/com/littlelearners/backend/services/StudentAnswerService.kt
 package com.littlelearners.backend.services
 
 import com.littlelearners.backend.dto.StudentAnswerResponse
@@ -21,22 +22,26 @@ class StudentAnswerService(
         val student = studentRepository.findById(studentId).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "Student with ID $studentId not found.")
         }
-
         val question = questionRepository.findById(questionId).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "Question with ID $questionId not found.")
+        }
+
+        // Optional: Prevent duplicate answer for same question by same student
+        val existing = studentAnswerRepository.findByStudent_IdAndAssignment_Id(studentId, question.assignment.id)
+            .firstOrNull { it.question.id == questionId }
+        if (existing != null) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "You have already answered this question.")
         }
 
         val answer = StudentAnswer(
             student = student,
             question = question,
-            assignment = question.assignment,
+            assignment = question.assignment, // assign from question
             chosenAnswer = chosenAnswer,
             isCorrect = question.correctAnswer == chosenAnswer
         )
-
         return studentAnswerRepository.save(answer)
     }
-
 
     fun getAnswersForAssignment(studentId: UUID, assignmentId: UUID): List<StudentAnswer> {
         return studentAnswerRepository.findByStudent_IdAndAssignment_Id(studentId, assignmentId)
@@ -53,10 +58,8 @@ class StudentAnswerService(
         )
     }
 
-
     fun getAllStudentAnswersForAssignment(assignmentId: UUID): List<Map<String, Any>> {
         val allAnswers = studentAnswerRepository.findByAssignment_Id(assignmentId)
-
 
         return allAnswers.groupBy { it.student.id!! }.map { (studentId, answers) ->
             val student = studentRepository.findById(studentId).orElse(null)

@@ -1,3 +1,4 @@
+// src/main/kotlin/com/littlelearners/backend/services/StudentAssignmentService.kt
 package com.littlelearners.backend.services
 
 import com.littlelearners.backend.models.StudentAssignment
@@ -70,8 +71,14 @@ class StudentAssignmentService(
         studentAssignmentRepository.deleteById(id)
     }
 
+    /**
+     * Finish assignment: compute score and mark an existing StudentAssignment as COMPLETED.
+     * This method will attempt to find an existing StudentAssignment row and UPDATE it.
+     * It will not create duplicates unless no such row exists at all (but DB unique constraint should prevent duplicates).
+     */
     fun finishAssignment(studentId: UUID, assignmentId: UUID): StudentAssignment {
-        var studentAssignment = studentAssignmentRepository.findFirstByStudent_IdAndAssignment_Id(studentId, assignmentId)
+        val studentAssignment = studentAssignmentRepository.findFirstByStudent_IdAndAssignment_Id(studentId, assignmentId)
+            ?: throw EntityNotFoundException("StudentAssignment not found for studentId=$studentId assignmentId=$assignmentId")
 
         val answers = studentAnswerRepository.findByStudent_IdAndAssignment_Id(studentId, assignmentId)
         val assignment = assignmentRepository.findById(assignmentId)
@@ -82,23 +89,13 @@ class StudentAssignmentService(
         val maxMarks = assignment.maxMarks ?: 100
         val score = if (totalQuestions > 0) (correctAnswers * maxMarks) / totalQuestions else 0
 
-        if (studentAssignment == null) {
-            val student = studentRepository.findById(studentId)
-                .orElseThrow { EntityNotFoundException("Student not found with id $studentId") }
-
-            studentAssignment = StudentAssignment(
-                student = student,
-                assignment = assignment,
-                completionStatus = "COMPLETED",
-                grade = score
-            )
-        } else {
-            if (studentAssignment.completionStatus == "COMPLETED") {
-                throw IllegalStateException("Assignment already completed by this student")
-            }
-            studentAssignment.completionStatus = "COMPLETED"
-            studentAssignment.grade = score
+        if (studentAssignment.completionStatus == "COMPLETED") {
+            // Already completed - return as-is or throw if you want to block re-finalize attempts
+            return studentAssignment
         }
+
+        studentAssignment.completionStatus = "COMPLETED"
+        studentAssignment.grade = score
 
         return studentAssignmentRepository.save(studentAssignment)
     }
