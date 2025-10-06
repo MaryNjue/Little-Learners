@@ -53,9 +53,11 @@ class UserService(
         }
 
         var studentFullName: String? = null
+        var studentId: UUID? = null
         if (user.role == UserRole.STUDENT) {
             val student = studentRepository.findByUserId(user.id)
             studentFullName = student?.fullName
+            studentId = student?.id
         }
 
         return LoginResponse(
@@ -63,6 +65,7 @@ class UserService(
             username = user.username,
             role = user.role,
             fullName = studentFullName,
+            studentId = studentId,
             message = "Login successful"
         )
     }

@@ -4,7 +4,7 @@ import com.littlelearners.backend.models.UserRole
 import java.util.UUID
 
 data class AuthResponse(
-    val userId: UUID, // This is the database UUID of the user
+    val userId: UUID,
     val username: String,
     val fullName: String?,
     val email: String,
