@@ -12,7 +12,7 @@ function StudentAssignments() {
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   
- const loggedInStudentId = localStorage.getItem("loggedInStudentId");
+ const loggedInStudentId = localStorage.getItem("studentId");
   console.log(`Fetching assignments for studentId=${loggedInStudentId}`);
 
   const fetchAssignments = () => {

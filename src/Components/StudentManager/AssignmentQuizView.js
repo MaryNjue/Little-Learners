@@ -65,7 +65,7 @@ function AssignmentQuizView({ assignment, onFinish }) {
 
       } catch (err) {
         console.error("Failed to load quiz data:", err.response || err);
-        alert("Failed to load quiz data. Check student and assignment IDs.");
+       // alert("Failed to load quiz data. Check student and assignment IDs.");
       } finally {
         setIsLoading(false);
       }
